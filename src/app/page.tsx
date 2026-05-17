@@ -1,22 +1,25 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Zap, BarChart3, Globe, Shield, Star, ShoppingBag, ArrowRight, BrainCircuit } from "lucide-react";
+import { Search, Zap, BarChart3, Globe, Shield, Star, ShoppingBag, ArrowRight, BrainCircuit, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { isUserPro, setProStatus } from "@/lib/search-store";
+import { isUserPro, getRemainingSearches } from "@/lib/search-store";
+import { PricingModal } from "@/components/PricingModal";
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [pro, setPro] = useState(false);
+  const [remaining, setRemaining] = useState(0);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setPro(isUserPro());
+    setRemaining(getRemainingSearches());
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -24,11 +27,6 @@ export default function Home() {
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
     }
-  };
-
-  const handleUpgrade = () => {
-    setProStatus(true);
-    window.location.reload();
   };
 
   return (
@@ -49,12 +47,16 @@ export default function Home() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <a href="#" className="hover:text-primary transition-colors">AI Engine</a>
+          <button onClick={() => setIsPricingOpen(true)} className="hover:text-primary transition-colors flex items-center gap-2">
+            <Crown className="w-4 h-4" /> Pricing
+          </button>
           <a href="#" className="hover:text-primary transition-colors">Marketplace Intel</a>
-          <a href="#" className="hover:text-primary transition-colors">Pro Pricing</a>
         </div>
         {!pro ? (
-          <Button onClick={handleUpgrade} className="glow-primary">Get Pro</Button>
+          <div className="flex items-center gap-4">
+             <span className="text-xs font-bold text-muted-foreground hidden sm:block">{remaining} FREE SEARCHES LEFT</span>
+             <Button onClick={() => setIsPricingOpen(true)} className="glow-primary">Get Pro</Button>
+          </div>
         ) : (
           <Badge className="bg-accent/20 text-accent border-accent/20 px-4 py-2">Pro Active</Badge>
         )}
@@ -92,14 +94,6 @@ export default function Home() {
                 Search Nova
               </Button>
             </div>
-            <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-              <span>Try searching for:</span>
-              <button onClick={() => setQuery("Gaming Laptop")} className="hover:text-primary transition-colors">Gaming Laptop</button>
-              <span className="opacity-30">•</span>
-              <button onClick={() => setQuery("AirPods Pro")} className="hover:text-primary transition-colors">AirPods Pro</button>
-              <span className="opacity-30">•</span>
-              <button onClick={() => setQuery("Nike Jordan 1")} className="hover:text-primary transition-colors">Nike Jordan 1</button>
-            </div>
           </form>
         </div>
 
@@ -120,19 +114,9 @@ export default function Home() {
             description="Our engine understands product categories to ensure accurate valuation from pens to luxury watches."
           />
         </div>
-
-        <section className="mt-40 space-y-12">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-headline font-bold">Monitored Platforms</h2>
-            <p className="text-muted-foreground">Our AI simulates intelligence from these top marketplaces</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-            {["Amazon", "Flipkart", "Myntra", "Ajio", "Nykaa", "Croma", "Meesho"].map((p) => (
-              <span key={p} className="text-2xl font-bold font-headline">{p}</span>
-            ))}
-          </div>
-        </section>
       </main>
+
+      <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
 
       <footer className="border-t border-white/5 bg-black/20 py-12 relative z-10">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
@@ -141,12 +125,7 @@ export default function Home() {
             <span className="font-headline font-bold">PriceNova</span>
           </div>
           <div className="text-sm text-muted-foreground">
-            © 2024 PriceNova Intelligence Systems. AI Market Simulation Prototype.
-          </div>
-          <div className="flex gap-6">
-            <a href="#" className="text-sm hover:text-white transition-colors">AI Roadmap</a>
-            <a href="#" className="text-sm hover:text-white transition-colors">Affiliates</a>
-            <a href="#" className="text-sm hover:text-white transition-colors">Terms</a>
+            © 2024 PriceNova Intelligence Systems.
           </div>
         </div>
       </footer>

@@ -5,15 +5,19 @@ import { useRouter } from "next/navigation";
 import { Search, Zap, LayoutDashboard, Settings, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { isUserPro, setProStatus } from "@/lib/search-store";
+import { isUserPro, getRemainingSearches } from "@/lib/search-store";
+import { PricingModal } from "./PricingModal";
 
 export function SearchHeader() {
   const [query, setQuery] = useState("");
   const [pro, setPro] = useState(false);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [remaining, setRemaining] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     setPro(isUserPro());
+    setRemaining(getRemainingSearches());
   }, []);
 
   const handleSearch = (e?: React.FormEvent) => {
@@ -21,11 +25,6 @@ export function SearchHeader() {
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
     }
-  };
-
-  const handleUpgrade = () => {
-    setProStatus(true);
-    window.location.reload();
   };
 
   return (
@@ -43,9 +42,14 @@ export function SearchHeader() {
         <div className="flex-1 flex items-center gap-8">
           <nav className="hidden lg:flex items-center gap-6">
             <NavLink icon={<Search className="w-4 h-4" />} label="Search" active />
-            <NavLink icon={<Crown className="w-4 h-4" />} label="Pricing" />
+            <button 
+              onClick={() => setIsPricingOpen(true)}
+              className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-white transition-colors"
+            >
+              <Crown className="w-4 h-4" />
+              Pricing
+            </button>
             <NavLink icon={<LayoutDashboard className="w-4 h-4" />} label="Dashboard" />
-            <NavLink icon={<Settings className="w-4 h-4" />} label="Admin" />
           </nav>
 
           <form onSubmit={handleSearch} className="flex-1 max-w-md relative group">
@@ -63,24 +67,24 @@ export function SearchHeader() {
           {pro ? (
             <div className="flex items-center gap-1.5 text-accent text-[10px] font-bold uppercase tracking-wider bg-accent/10 px-3 py-1.5 rounded-full border border-accent/20">
               <Zap className="w-3 h-3 fill-current" />
-              PRO • Unlimited
+              PRO • UNLIMITED
             </div>
           ) : (
-            <button 
-              onClick={handleUpgrade}
-              className="text-primary hover:text-white transition-colors text-xs font-bold"
-            >
-              Get Pro
-            </button>
-          )}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
-              S
+            <div className="flex items-center gap-3">
+               <span className="text-[10px] font-bold text-muted-foreground hidden md:block">
+                {remaining} FREE LEFT
+              </span>
+              <button 
+                onClick={() => setIsPricingOpen(true)}
+                className="bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg border border-primary/20"
+              >
+                Upgrade
+              </button>
             </div>
-            <span className="text-xs font-bold text-muted-foreground hidden sm:block">santhu59</span>
-          </div>
+          )}
         </div>
       </div>
+      <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
     </header>
   );
 }
