@@ -7,12 +7,13 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
-  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Zap, ShieldCheck, Crown, Smartphone, CreditCard, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Zap, Crown, Smartphone, CreditCard, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { setProStatus } from "@/lib/search-store";
+import { useToast } from "@/hooks/use-toast";
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -21,12 +22,32 @@ interface PricingModalProps {
 }
 
 export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) {
-  const [step, setStep] = useState<"plans" | "payment">("plans");
+  const [step, setStep] = useState<"plans" | "payment" | "verifying">("plans");
+  const [txnId, setTxnId] = useState("");
+  const { toast } = useToast();
 
   const handleUpgrade = () => {
-    setProStatus(true);
-    if (onSuccess) onSuccess();
-    window.location.reload();
+    if (txnId.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Transaction ID",
+        description: "Please enter a valid 6-12 digit UPI transaction ID.",
+      });
+      return;
+    }
+
+    setStep("verifying");
+    
+    // Simulate payment verification delay
+    setTimeout(() => {
+      setProStatus(true);
+      if (onSuccess) onSuccess();
+      toast({
+        title: "Account Activated!",
+        description: "Your Pro membership is now active. Enjoy unlimited searches!",
+      });
+      window.location.reload();
+    }, 2500);
   };
 
   return (
@@ -37,12 +58,14 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
             <Crown className="text-white w-7 h-7" />
           </div>
           <DialogTitle className="text-3xl font-headline font-bold">
-            {step === "plans" ? "Upgrade to Pro" : "Complete Payment"}
+            {step === "plans" ? "Upgrade to Pro" : step === "payment" ? "Complete Payment" : "Verifying Payment"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground pt-2">
             {step === "plans" 
-              ? "You've reached your free search limit. Unlock unlimited intelligence."
-              : "Pay using any UPI app to activate your Pro account instantly."
+              ? "Unlock unlimited real-time market scans and deep comparisons."
+              : step === "payment"
+              ? "Pay using any UPI app to activate your Pro account."
+              : "Our automated system is verifying your transaction..."
             }
           </DialogDescription>
         </DialogHeader>
@@ -52,7 +75,7 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
             <>
               <div className="space-y-4">
                 <FeatureItem text="Unlimited Real-time Searches" />
-                <FeatureItem text="Deep Multi-Platform Comparison" />
+                <FeatureItem text="7+ Platform Comparisons" />
                 <FeatureItem text="Advanced Price Analytics" />
                 <FeatureItem text="Priority Market Intelligence" />
               </div>
@@ -69,7 +92,7 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 Choose Pro Plan
               </Button>
             </>
-          ) : (
+          ) : step === "payment" ? (
             <>
               <div className="space-y-6">
                 <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
@@ -83,19 +106,26 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                    Enter Transaction ID (from your UPI App)
+                  </label>
+                  <Input 
+                    value={txnId}
+                    onChange={(e) => setTxnId(e.target.value)}
+                    placeholder="e.g. 40561234..."
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <PaymentMethod icon={<Smartphone className="w-4 h-4" />} label="Google Pay" />
                   <PaymentMethod icon={<CreditCard className="w-4 h-4" />} label="PhonePe" />
                 </div>
-
-                <div className="text-xs text-center text-muted-foreground leading-relaxed">
-                  After payment, click the button below to activate your account. 
-                  Our system verifies payments in seconds.
-                </div>
               </div>
 
               <Button onClick={handleUpgrade} className="w-full h-14 rounded-xl text-lg font-bold bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/20">
-                Confirm & Activate Pro
+                Submit & Activate
               </Button>
               <button 
                 onClick={() => setStep("plans")}
@@ -104,6 +134,19 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 Go Back
               </button>
             </>
+          ) : (
+            <div className="py-12 flex flex-col items-center justify-center space-y-6 text-center">
+              <div className="relative">
+                <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-accent" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-bold text-lg">Validating Transaction {txnId}</p>
+                <p className="text-sm text-muted-foreground px-4">
+                  Checking with your UPI provider. Please do not close this window.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       </DialogContent>
