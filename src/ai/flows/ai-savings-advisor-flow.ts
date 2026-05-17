@@ -3,8 +3,8 @@
  * @fileOverview An AI shopping advisor that recommends the best product deal.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai, googleAIPlugin } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const ProductOfferSchema = z.object({
   platform: z.string().describe('The name of the e-commerce platform.'),
@@ -34,7 +34,7 @@ export type AISavingsAdvisorOutput = z.infer<typeof AISavingsAdvisorOutputSchema
 
 const advisorPrompt = ai.definePrompt({
   name: 'aiSavingsAdvisorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAIPlugin.model('gemini-1.5-flash'),
   input: {schema: AISavingsAdvisorInputSchema},
   output: {schema: AISavingsAdvisorOutputSchema},
   config: {
