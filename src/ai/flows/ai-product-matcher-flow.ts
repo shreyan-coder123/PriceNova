@@ -25,6 +25,10 @@ const ProductSchema = z.object({
     .string()
     .optional()
     .describe('Detailed specifications of the product, if available, in a string format.'),
+  rating: z.number().optional().describe('Average customer rating (out of 5).'),
+  reviewsCount: z.number().optional().describe('Total number of reviews.'),
+  stockStatus: z.string().optional().describe('Current availability status.'),
+  deliveryEstimate: z.string().optional().describe('Estimated delivery time.'),
 });
 
 export type Product = z.infer<typeof ProductSchema>;

@@ -11,11 +11,15 @@ import { z } from 'genkit';
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Ajio)'),
   title: z.string().describe('The full title of the product including brand and model'),
-  description: z.string().describe('A brief realistic product description'),
+  description: z.string().describe('A detailed realistic product description'),
   price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
-  imageUrl: z.string().optional().describe('A realistic image URL'),
-  specifications: z.string().optional().describe('Key specs of the product'),
+  imageUrl: z.string().optional().describe('A realistic image URL using picsum.photos/seed/<id>/400/400'),
+  specifications: z.string().optional().describe('Detailed specifications (e.g., Processor, RAM, Color, etc.)'),
+  rating: z.number().optional().describe('Average customer rating (out of 5)'),
+  reviewsCount: z.number().optional().describe('Total number of reviews'),
+  stockStatus: z.string().optional().describe('Current availability status (e.g., In Stock, Only 2 left)'),
+  deliveryEstimate: z.string().optional().describe('Estimated delivery time (e.g., Tomorrow, 3-5 days)'),
 });
 
 const MatchedGroupSchema = z.object({
@@ -47,21 +51,26 @@ const orchestratorPrompt = ai.definePrompt({
 
 INSTRUCTIONS:
 1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
-   - Use ACTUAL brands (e.g. for phones: Apple, Samsung; for pens: Reynolds, Parker, Pilot; for shoes: Nike, Adidas).
-   - Include specific model names and variants.
+   - Use ACTUAL brands and specific models.
+   - For 'imageUrl', use 'https://picsum.photos/seed/<unique_id>/400/400'. Use a unique seed for each product based on its title.
 
 2. RIGOROUS REALISTIC PRICING (INR):
    - Everyday Stationery (Pens/Pencils): ₹10 - ₹200 for single units or packs.
    - Standard Electronics: ₹5,000 - ₹50,000.
    - Flagship Mobiles/Laptops: ₹60,000 - ₹1,80,000.
    - Fashion/Sneakers: ₹500 - ₹12,000.
-   - Grocery items: ₹20 - ₹800.
    - Luxury Items: Up to ₹5,00,000.
-   - MATCH THE PRICE TO THE CATEGORY. A pen should NOT cost thousands of rupees unless it is a luxury Montblanc.
+   - MATCH THE PRICE TO THE CATEGORY.
 
-3. MATCH & GROUP: Analyze the simulated listings and group identical items (same brand, model, and variant) into matchedGroups.
+3. RICH PRODUCT DETAILS:
+   - Provide a realistic 'description' (2-3 sentences).
+   - Include 'specifications' as a comma-separated list of key features.
+   - Generate realistic 'rating' (e.g. 3.8 to 4.9) and 'reviewsCount'.
+   - Provide a realistic 'stockStatus' and 'deliveryEstimate'.
 
-4. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.
+4. MATCH & GROUP: Analyze the simulated listings and group identical items (same brand, model, and variant) into matchedGroups.
+
+5. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.
 
 IMPORTANT: Ensure the 'price' field is a raw number. Generate at least 15 unique product entries across multiple groups.`,
 });
@@ -86,15 +95,15 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       let fallbackPrice = 499;
       let fallbackTitle = `${input.query} - Standard Edition`;
 
-      if (q.includes('pen') || q.includes('pencil') || q.includes('stationery')) {
+      if (q.includes('pen') || q.includes('pencil')) {
         fallbackPrice = 45;
-        fallbackTitle = `Reynolds Jetter Classic Ball Pen - Pack of 5`;
-      } else if (q.includes('phone') || q.includes('iphone') || q.includes('mobile') || q.includes('laptop')) {
+        fallbackTitle = `Reynolds Jetter Classic Ball Pen`;
+      } else if (q.includes('phone') || q.includes('mobile')) {
         fallbackPrice = 54999;
-        fallbackTitle = `${input.query} (128GB Storage)`;
+        fallbackTitle = `${input.query} (128GB)`;
       }
 
-      const platforms = ['Amazon', 'Flipkart', 'Myntra', 'Ajio', 'Croma', 'Nykaa', 'Meesho'];
+      const platforms = ['Amazon', 'Flipkart', 'Croma', 'Ajio'];
       const results: OrchestratorOutput = {
         matchedGroups: [
           {
@@ -102,10 +111,15 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
             products: platforms.map((p, i) => ({
               platform: p,
               title: fallbackTitle,
-              description: `Top rated ${input.query} on ${p}.`,
-              price: Math.round(fallbackPrice * (1 + (i - 3) * 0.02)),
+              description: `Top rated ${input.query} on ${p}. Premium build quality and durable design.`,
+              price: Math.round(fallbackPrice * (1 + (i - 1) * 0.05)),
               productUrl: `https://${p.toLowerCase()}.com`,
-              specifications: 'Standard quality'
+              imageUrl: `https://picsum.photos/seed/${fallbackTitle}-${p}/400/400`,
+              specifications: 'Standard size, High-grade materials, Lightweight',
+              rating: 4.2 + (i * 0.1),
+              reviewsCount: 1200 + (i * 500),
+              stockStatus: 'In Stock',
+              deliveryEstimate: 'Tomorrow'
             }))
           }
         ],
