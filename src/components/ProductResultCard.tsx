@@ -54,7 +54,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
           {platformCount > 1 && (
             <Badge className="absolute bottom-3 left-3 bg-accent/90 text-white border-none backdrop-blur-md px-3 py-1 text-[10px] font-bold flex items-center gap-1.5 shadow-lg">
               <Globe className="w-3 h-3" />
-              COMPARED ON {platformCount} PLATFORMS
+              COMPARED ON {platformCount} STORES
             </Badge>
           )}
         </div>
@@ -104,21 +104,21 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             <Dialog>
               <DialogTrigger asChild>
                 <button className="h-10 px-5 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all text-xs font-bold flex items-center gap-2 group/btn border border-primary/20">
-                  {platformCount > 1 ? `Compare ${platformCount} Stores` : `View Details`}
+                  {platformCount > 1 ? `Compare All ${platformCount} Stores` : `View Details`}
                   <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl bg-[#16181d] border-white/10 text-white shadow-2xl overflow-hidden rounded-2xl">
+              <DialogContent className="max-w-3xl bg-[#16181d] border-white/10 text-white shadow-2xl overflow-hidden rounded-2xl p-0">
                 <DialogHeader className="p-6 bg-gradient-to-r from-primary/20 to-accent/20 border-b border-white/5">
                   <DialogTitle className="text-2xl font-headline font-bold flex items-center gap-3">
                     <Layers className="text-primary w-6 h-6" />
-                    Market Comparison: {platformCount} Stores Found
+                    Market Comparison: {platformCount} Marketplace Offers
                   </DialogTitle>
                 </DialogHeader>
                 
                 <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                   <div className="flex flex-col md:flex-row gap-8 items-start pb-8 border-b border-white/5">
-                    <div className="relative w-40 h-40 rounded-2xl overflow-hidden bg-white p-4 flex-shrink-0 border border-white/10">
+                    <div className="relative w-40 h-40 rounded-2xl overflow-hidden bg-white p-4 flex-shrink-0 border border-white/10 shadow-lg">
                       <Image 
                         src={bestOffer.imageUrl} 
                         alt={bestOffer.title} 
@@ -132,8 +132,8 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                         <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] uppercase font-bold px-3 py-1">
                           {bestOffer.category}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] uppercase font-bold px-3 py-1">
-                          Verified Comparison
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold px-3 py-1 border-white/10">
+                          Live Real-time Scan
                         </Badge>
                       </div>
                       <h4 className="font-headline font-bold text-2xl leading-tight">{bestOffer.title}</h4>
@@ -145,19 +145,18 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                     <div className="flex items-center justify-between">
                       <h5 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
                         <Globe className="w-4 h-4 text-primary" />
-                        Available Marketplace Offers
+                        Marketplace Comparison Results
                       </h5>
-                      <span className="text-[10px] text-muted-foreground italic px-2 py-1 bg-white/5 rounded">Live Real-time Scan</span>
                     </div>
                     <div className="grid gap-3">
                       {products.map((p, idx) => (
-                        <div key={idx} className={`flex items-center justify-between p-5 rounded-2xl transition-all border ${idx === 0 ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20' : 'bg-[#252833] border-white/5 hover:border-white/10'}`}>
+                        <div key={idx} className={`flex items-center justify-between p-5 rounded-2xl transition-all border ${idx === 0 ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20 shadow-lg' : 'bg-[#252833] border-white/5 hover:border-white/10'}`}>
                           <div className="flex items-center gap-8 flex-1">
                             <div className="min-w-[120px]">
                               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{p.platform}</p>
                               <div className="flex items-baseline gap-2">
                                 <span className="text-xl font-bold">₹{p.price.toLocaleString()}</span>
-                                {idx === 0 && <Badge className="bg-green-500/10 text-green-400 border-none text-[8px] px-2 h-4 uppercase font-black">Best Price</Badge>}
+                                {idx === 0 && <Badge className="bg-green-500/10 text-green-400 border-none text-[8px] px-2 h-4 uppercase font-black">Best Value</Badge>}
                               </div>
                             </div>
                             <div className="hidden sm:grid grid-cols-2 gap-x-8 gap-y-1">

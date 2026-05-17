@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview This file handles real-time product data fetching and intelligent grouping.
- * It maps raw SerpApi results and groups identical items to provide price comparison.
+ * It maps raw SerpApi results and groups identical items to provide multi-platform comparison.
  */
 
 import { z } from 'zod';
@@ -34,13 +34,13 @@ const OrchestratorOutputSchema = z.object({
 
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
-const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital"];
+const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital", "Meesho", "Snapdeal", "BigBasket", "Blinkit"];
 
 /**
  * Fetches real shopping results from SerpApi
  */
 async function fetchLiveShoppingData(query: string) {
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in&num=40`;
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in&num=60`;
   
   try {
     const response = await fetch(url);
@@ -62,7 +62,7 @@ function getGroupingKey(title: string): string {
   const noiseWords = [
     'pack', 'of', 'blue', 'black', 'red', 'green', 'ink', 'pen', 'set', 'pcs', 
     'genuine', 'original', 'free', 'shipping', 'multi', 'color', 'new', 'latest',
-    'buy', 'online', 'india', 'best', 'price'
+    'buy', 'online', 'india', 'best', 'price', '157', 'ub', 'eye', 'rollerball', 'micro', 'fine'
   ];
   
   const clean = title.toLowerCase()
@@ -70,8 +70,8 @@ function getGroupingKey(title: string): string {
     .split(/\s+/)
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
-  // Return the first 3 core identifying words to cluster variants
-  return clean.slice(0, 3).join(' ');
+  // Return the first 2-3 core identifying words to cluster variants across platforms
+  return clean.slice(0, 2).join(' ');
 }
 
 /**
@@ -138,11 +138,15 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       };
     });
 
-    // Prioritize groups that have multiple platforms
-    matchedGroups.sort((a, b) => {
+    // CRITICAL: Filter and prioritize groups that have at least 2 platforms, ideally 3+
+    const multiPlatformGroups = matchedGroups.filter(g => g.products.length >= 2);
+    const singlePlatformGroups = matchedGroups.filter(g => g.products.length === 1);
+
+    multiPlatformGroups.sort((a, b) => {
       const aPlatforms = a.products.length;
       const bPlatforms = b.products.length;
       
+      // Prioritize groups with more platforms
       if (bPlatforms !== aPlatforms) {
         return bPlatforms - aPlatforms;
       }
@@ -150,7 +154,7 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       return a.products[0].price - b.products[0].price;
     });
 
-    return { matchedGroups };
+    return { matchedGroups: [...multiPlatformGroups, ...singlePlatformGroups] };
   } catch (error: any) {
     console.error('Orchestrator Error:', error);
     throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
