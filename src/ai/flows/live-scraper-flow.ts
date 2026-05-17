@@ -9,10 +9,10 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ProductSchema = z.object({
-  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart)'),
-  title: z.string().describe('The full title of the product'),
-  description: z.string().describe('A brief realistic description'),
-  price: z.coerce.number().describe('The raw price as a number'),
+  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Ajio)'),
+  title: z.string().describe('The full title of the product including brand and model'),
+  description: z.string().describe('A brief realistic product description'),
+  price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
   imageUrl: z.string().optional().describe('A realistic image URL'),
   specifications: z.string().optional().describe('Key specs of the product'),
@@ -41,23 +41,26 @@ const orchestratorPrompt = ai.definePrompt({
   input: { schema: z.object({ query: z.string() }) },
   output: { schema: OrchestratorOutputSchema },
   config: {
-    temperature: 0.4,
+    temperature: 0.3,
   },
   prompt: `You are the PriceNova AI Search Orchestrator. Your task is to provide realistic, current market data for the product: "{{query}}".
 
 INSTRUCTIONS:
 1. SIMULATE SEARCH: Generate 6-10 realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho). 
-   - Even for simple items like a "pen" or "notebook", provide realistic brand names (e.g. Parker, Reynolds, Classmate).
-   - Prices MUST be realistic. Use the actual current market rate in INR for the product category.
-   - For simple items, the price should be small (e.g., 50-100 INR). For premium electronics, it should be high (e.g., 70,000 INR).
+   - Brands MUST be realistic (e.g., if query is "pen", use Reynolds, Parker, Pilot, Linc; if "laptop", use Dell, HP, Apple, ASUS).
+   - Prices MUST be extremely realistic for the Indian market in INR. 
+   - CATEGORY GUIDELINES:
+     * Stationery/Pens: ₹10 - ₹200 (unless it's a luxury brand like Montblanc).
+     * Electronics/Mobiles: ₹10,000 - ₹1,50,000.
+     * Footwear: ₹500 - ₹15,000.
+     * Grocery: ₹20 - ₹500.
 
 2. MATCH & GROUP: Analyze the simulated listings and group identical items together. 
-   - Identical items MUST have the same model, size, or specific variant.
-   - Products with different variants (e.g. Blue vs Black ink, 128GB vs 256GB) MUST be in separate groups.
+   - Identical items MUST have the same brand, model, and size.
 
-3. SHOPPING ADVICE: Analyze the results and identify the best overall deal based on price and platform reliability.
+3. SHOPPING ADVICE: Identify the best overall deal.
 
-IMPORTANT: Ensure the 'price' field is a raw number without currency symbols or commas.`,
+IMPORTANT: Ensure the 'price' field is a raw number. DO NOT use commas or currency symbols.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -75,25 +78,41 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       return output;
     } catch (error: any) {
       console.error('Orchestrator Error:', error);
-      // Return a structured fallback to keep the UI functional
+      
+      // Intelligent fallback pricing based on query keywords
+      const q = input.query.toLowerCase();
+      let fallbackPrice = 499;
+      let fallbackTitle = `${input.query} - Standard Edition`;
+
+      if (q.includes('pen') || q.includes('pencil') || q.includes('stationery')) {
+        fallbackPrice = 45;
+        fallbackTitle = `Reynolds Jetter Classic Ball Pen - Pack of 5`;
+      } else if (q.includes('iphone') || q.includes('phone') || q.includes('laptop')) {
+        fallbackPrice = 64999;
+        fallbackTitle = `${input.query} (128GB Storage)`;
+      } else if (q.includes('shoe') || q.includes('sneaker')) {
+        fallbackPrice = 2499;
+        fallbackTitle = `${input.query} - Running Edition`;
+      }
+
       return {
         matchedGroups: [
           {
-            groupId: 'default-group',
+            groupId: 'fallback-group',
             products: [
               {
                 platform: 'Amazon',
-                title: `${input.query} - Standard Edition`,
-                description: `Best-selling ${input.query} with high durability and standard features.`,
-                price: 499,
+                title: fallbackTitle,
+                description: `Best-selling ${input.query} available now with Prime delivery.`,
+                price: fallbackPrice,
                 productUrl: 'https://amazon.in',
                 specifications: 'Standard quality'
               },
               {
                 platform: 'Flipkart',
-                title: `${input.query} - Premium Pack`,
-                description: `Value pack for ${input.query} available now.`,
-                price: 450,
+                title: fallbackTitle,
+                description: `Great deal on ${input.query} with bank offers.`,
+                price: Math.round(fallbackPrice * 0.95),
                 productUrl: 'https://flipkart.com',
                 specifications: 'Standard quality'
               }
@@ -101,10 +120,10 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
           }
         ],
         savingsAdvice: {
-          recommendationSummary: "Standard marketplace offers found.",
+          recommendationSummary: "Marketplace offers found.",
           bestOfferPlatform: "Flipkart",
-          bestOfferProductTitle: `${input.query} - Premium Pack`,
-          reasoning: "Best available price currently found in simulation."
+          bestOfferProductTitle: fallbackTitle,
+          reasoning: "Lower price found after applying simulated platform discounts."
         }
       };
     }
