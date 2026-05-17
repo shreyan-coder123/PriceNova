@@ -57,8 +57,8 @@ async function fetchLiveShoppingData(query: string) {
 }
 
 /**
- * Normalizes title for grouping by removing noise words and focusing on core brand and model.
- * This is CRITICAL for matching products across Amazon, Flipkart, etc.
+ * Aggressively normalizes titles to find identical products across Amazon, Flipkart, etc.
+ * This function removes noise words and focuses on core brand/model.
  */
 function getGroupingKey(title: string): string {
   const noiseWords = [
@@ -75,8 +75,7 @@ function getGroupingKey(title: string): string {
     .split(/\s+/)
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
-  // Return the core identifying words to cluster variants across platforms
-  // We use the first 4 words for a better balance between accuracy and matching
+  // Using the first 4 core identifying words to cluster variants across platforms
   return clean.slice(0, 4).join(' ');
 }
 
@@ -150,11 +149,9 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       const aCount = a.products.length;
       const bCount = b.products.length;
       
-      // First, prioritize groups with 3+ platforms
       if (aCount >= 3 && bCount < 3) return -1;
       if (bCount >= 3 && aCount < 3) return 1;
       
-      // Then sort by most platforms
       return bCount - aCount;
     });
 
