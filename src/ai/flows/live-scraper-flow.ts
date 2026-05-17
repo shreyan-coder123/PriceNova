@@ -1,25 +1,26 @@
 'use server';
 /**
  * @fileOverview This flow is the main PriceNova AI Orchestrator.
- * It uses Gemini to provide realistic market data, group identical products,
- * and generate shopping advice in a single efficient server-side call.
+ * It now fetches real-time data from SerpApi (Google Shopping) and uses
+ * Gemini to group identical products into matched sets for comparison.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
+
 const ProductSchema = z.object({
-  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Zepto, Blinkit)'),
-  title: z.string().describe('The full specific title including BRAND and MODEL (e.g. "Campus TRINO Women Sneakers", "Samsung Galaxy S24 Ultra")'),
-  description: z.string().describe('A detailed realistic product description.'),
-  price: z.coerce.number().describe('The raw price as a number in INR'),
-  productUrl: z.string().describe('A realistic URL to the product'),
-  imageUrl: z.string().describe('The URL using the format https://picsum.photos/seed/{unique_seed}/400/400'),
-  imageHint: z.string().describe('A 1-2 word search keyword for the product image'),
+  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
+  title: z.string().describe('The full specific title of the product'),
+  description: z.string().describe('A realistic product description.'),
+  price: z.coerce.number().describe('The price in INR'),
+  productUrl: z.string().describe('The direct link to the product'),
+  imageUrl: z.string().describe('The thumbnail URL provided by the search results'),
   category: z.string().describe('Product category'),
-  rating: z.number().optional().describe('Average customer rating (out of 5)'),
+  rating: z.number().optional().describe('Average customer rating'),
   reviewsCount: z.number().optional().describe('Total number of reviews'),
-  deliveryDays: z.number().describe('Estimated delivery in days (1-7)'),
+  deliveryDays: z.number().describe('Estimated delivery in days'),
   trustScore: z.number().describe('Reliability score (0-100)'),
 });
 
@@ -40,28 +41,58 @@ const OrchestratorOutputSchema = z.object({
 
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
+/**
+ * Fetches real shopping results from SerpApi
+ */
+async function fetchLiveShoppingData(query: string) {
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in`;
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.shopping_results || [];
+  } catch (error) {
+    console.error('SerpApi Fetch Error:', error);
+    return [];
+  }
+}
+
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
   model: 'googleai/gemini-1.5-flash',
-  input: { schema: z.object({ query: z.string() }) },
+  input: { 
+    schema: z.object({ 
+      query: z.string(),
+      rawResults: z.array(z.any())
+    }) 
+  },
   output: { schema: OrchestratorOutputSchema },
   config: {
-    temperature: 0.7,
+    temperature: 0.2,
   },
-  prompt: `You are the PriceNova AI Market Intelligence Orchestrator. Your task is to provide realistic, current market data for: "{{query}}".
+  prompt: `You are the PriceNova AI Market Intelligence Orchestrator. 
+I have fetched real-time shopping results for: "{{query}}" from Google Shopping.
 
-STRICT INSTRUCTIONS FOR TITLES:
-- USE REAL BRANDS and SPECIFIC MODEL NAMES.
-- AVOID generic words like "Product", "Item", or "Standard Edition".
-- FORMAT: [Brand] [Model/Sub-brand] [Specific Name/Category]. 
-- EXAMPLE: If query is "shoes", titles should be like "Campus TRINO Women Sneakers" or "Nike Air Max 270". If query is "pen", titles should be "Parker Frontier Matte Black GT Roller Ball Pen".
-- ENSURE titles are unique and represent specific variants.
+YOUR TASK:
+1. Analyze the raw shopping results provided below.
+2. GROUP identical products (same Brand, same Model, same specs) into "matchedGroups".
+3. Each group should contain the same product being sold on different platforms (sources).
+4. If a product is unique or doesn't have a match, put it in its own group.
+5. Standardize the data into the requested output schema.
+6. Ensure prices are treated as raw numbers in INR.
+7. For deliveryDays and trustScore, estimate realistic values if not provided (e.g., Amazon/Flipkart usually 2-4 days, 90+ trust).
 
-MARKET SIMULATION:
-1. Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Zepto, Blinkit).
-2. For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/600/400 to ensure a unique consistent image per result.
-3. PRICING: Use realistic market pricing for the Indian market in INR. (e.g., Campus shoes ~₹1200-₹3000, Parker Pens ~₹400-₹1500).
-4. MATCH & GROUP: Analyze the simulated listings and group identical items into matchedGroups. Identical items should have the same brand/model across different platforms. At least 5 unique groups should be generated if possible.`,
+RAW RESULTS FROM SEARCH:
+{{#each rawResults}}
+- Source: {{source}}
+  Title: {{title}}
+  Price: {{price}}
+  Link: {{link}}
+  Thumbnail: {{thumbnail}}
+  Rating: {{rating}}
+  Reviews: {{reviews}}
+---
+{{/each}}`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -71,43 +102,25 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
     outputSchema: OrchestratorOutputSchema,
   },
   async (input) => {
+    const rawResults = await fetchLiveShoppingData(input.query);
+    
+    if (!rawResults || rawResults.length === 0) {
+      throw new Error('No real-time results found for this query.');
+    }
+
     try {
-      const { output } = await orchestratorPrompt(input);
+      const { output } = await orchestratorPrompt({ 
+        query: input.query, 
+        rawResults: rawResults.slice(0, 20) // Limit to top 20 for grouping efficiency
+      });
+      
       if (!output || !output.matchedGroups || output.matchedGroups.length === 0) {
-        throw new Error('Incomplete data generated by AI');
+        throw new Error('AI failed to process live data.');
       }
       return output;
     } catch (error: any) {
-      console.error('Orchestrator Error:', error);
-      // Fallback for demo stability
-      const platforms = ['Amazon', 'Flipkart', 'Myntra'];
-      return {
-        matchedGroups: [
-          {
-            groupId: 'fallback-campus',
-            products: platforms.map((p, i) => ({
-              platform: p,
-              title: `Campus TRINO Women Sneakers`,
-              description: `High-quality Campus sneakers with comfortable sole and breathable fabric.`,
-              price: 1899 + (i * 100),
-              productUrl: '#',
-              imageUrl: `https://picsum.photos/seed/${input.query}-${p}/600/400`,
-              imageHint: "sneakers",
-              category: 'footwear',
-              rating: 4.5,
-              reviewsCount: 1250,
-              deliveryDays: 2,
-              trustScore: 92
-            }))
-          }
-        ],
-        savingsAdvice: {
-          recommendationSummary: 'We found competitive results for your search.',
-          bestOfferPlatform: 'Amazon',
-          bestOfferProductTitle: `Campus TRINO Women Sneakers`,
-          reasoning: 'Best balance of price and delivery.'
-        }
-      };
+      console.error('Orchestrator Processing Error:', error);
+      throw error;
     }
   }
 );
