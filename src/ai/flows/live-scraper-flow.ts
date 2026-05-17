@@ -1,7 +1,8 @@
 'use server';
 /**
- * @fileOverview This file handles real-time product data fetching and intelligent grouping.
- * It maps raw SerpApi results and groups identical items to provide multi-platform comparison.
+ * @fileOverview This file handles real-time product data fetching and aggressive grouping.
+ * It ensures that products are compared across multiple platforms (Amazon, Flipkart, etc.)
+ * by using a sophisticated title normalization technique.
  */
 
 import { z } from 'zod';
@@ -33,7 +34,7 @@ const OrchestratorOutputSchema = z.object({
 
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
-const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital", "Meesho", "Snapdeal", "BigBasket", "Blinkit"];
+const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital", "Meesho", "Snapdeal"];
 
 /**
  * Fetches real shopping results from SerpApi
@@ -55,15 +56,16 @@ async function fetchLiveShoppingData(query: string) {
 }
 
 /**
- * Normalizes title for grouping by removing noise words and focusing on core product identification.
+ * Normalizes title for grouping by removing noise words and focusing on core brand and model.
+ * This is CRITICAL for matching products across Amazon, Flipkart, etc.
  */
 function getGroupingKey(title: string): string {
   const noiseWords = [
     'pack', 'of', 'blue', 'black', 'red', 'green', 'ink', 'pen', 'set', 'pcs', 
     'genuine', 'original', 'free', 'shipping', 'multi', 'color', 'new', 'latest',
-    'buy', 'online', 'india', 'best', 'price', 'eye', 'rollerball', 
-    'micro', 'fine', 'women', 'men', 'certified', 'authentic', '157', 'ub',
-    'mobile', 'phone', 'smartphone', 'electronics', 'appliance', 'official', 'warranty'
+    'buy', 'online', 'india', 'best', 'price', 'micro', 'fine', 'women', 'men', 
+    'certified', 'authentic', '157', 'ub', 'mobile', 'phone', 'smartphone', 
+    'electronics', 'official', 'warranty', '128gb', '256gb', '512gb', 'ram', 'plus'
   ];
   
   const clean = title.toLowerCase()
@@ -71,9 +73,9 @@ function getGroupingKey(title: string): string {
     .split(/\s+/)
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
-  // Return the first 2-3 core identifying words to cluster variants across platforms
-  // We use a shorter key to be more "fuzzy" and catch matches between Amazon and Flipkart
-  return clean.slice(0, 3).join(' ');
+  // Return the first 2 core identifying words to cluster variants across platforms
+  // A shorter key is more "fuzzy" and helps match between different retailers
+  return clean.slice(0, 2).join(' ');
 }
 
 /**
@@ -84,7 +86,7 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
     const rawResults = await fetchLiveShoppingData(query);
     
     if (!rawResults || rawResults.length === 0) {
-      throw new Error('No real-time market data found for this product.');
+      return { matchedGroups: [] };
     }
 
     const groupsMap = new Map<string, any[]>();
@@ -113,7 +115,7 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       };
 
       const groupKey = getGroupingKey(item.title);
-      if (groupKey) {
+      if (groupKey && groupKey.length > 3) {
         if (!groupsMap.has(groupKey)) {
           groupsMap.set(groupKey, []);
         }
@@ -153,16 +155,16 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       if (aCount >= 3 && bCount < 3) return -1;
       if (bCount >= 3 && aCount < 3) return 1;
       
-      // If both have 3+ or both have < 3, sort by platform diversity count
+      // If diversity is same, sort by overall relevance (platform count)
       if (bCount !== aCount) {
         return bCount - aCount;
       }
       
-      // If still tied, sort by best price
+      // Finally sort by price
       return a.products[0].price - b.products[0].price;
     });
 
-    return { matchedGroups: matchedGroups.slice(0, 15) };
+    return { matchedGroups: matchedGroups.slice(0, 12) };
   } catch (error: any) {
     console.error('Orchestrator Error:', error);
     throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');

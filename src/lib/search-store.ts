@@ -1,6 +1,5 @@
 "use client";
 
-const LIMIT = 20; // Synced with UI
 const STORAGE_KEY = "pricenova_searches";
 
 export function getSearchCount(): number {
@@ -12,15 +11,16 @@ export function incrementSearchCount(): boolean {
   if (typeof window === "undefined") return false;
   const current = getSearchCount();
   localStorage.setItem(STORAGE_KEY, (current + 1).toString());
-  return current + 1 >= LIMIT;
+  // Unlimited searches - never returns true for "limit reached"
+  return false;
 }
 
 export function isUserPro(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem("pricenova_pro") === "true";
+  // Everyone is Pro now for unlimited access
+  return true;
 }
 
 export function setProStatus(status: boolean) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("pricenova_pro", status.toString());
+  localStorage.setItem("pricenova_pro", "true");
 }
