@@ -8,9 +8,10 @@ import Image from "next/image";
 interface ProductResultCardProps {
   product: any;
   isBestValue?: boolean;
+  platformCount?: number;
 }
 
-export function ProductResultCard({ product, isBestValue }: ProductResultCardProps) {
+export function ProductResultCard({ product, isBestValue, platformCount = 1 }: ProductResultCardProps) {
   const rating = product.rating || 4.2;
   const reviews = product.reviewsCount || 0;
   const delivery = product.deliveryDays || 3;
@@ -38,7 +39,7 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
         <div className="p-4 space-y-4">
           <div className="space-y-1">
             <p className="text-[11px] font-medium text-muted-foreground/60 flex items-center gap-1">
-              {product.platform} • Shopping
+              {product.platform} • {product.category || 'Shopping'}
             </p>
             <h3 className="font-headline font-bold text-base text-white leading-tight min-h-[2.5rem] line-clamp-2">
               {product.title}
@@ -49,19 +50,19 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
             <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1">
               <div className="flex items-center gap-1 text-[9px] font-bold text-green-400 uppercase tracking-tight">
                 <TrendingDown className="w-2.5 h-2.5" />
-                Cheapest
+                Price
               </div>
               <p className="text-sm font-bold text-white">₹{product.price.toLocaleString()}</p>
-              <p className="text-[8px] text-muted-foreground">Other</p>
+              <p className="text-[8px] text-muted-foreground">Best Deal</p>
             </div>
             
             <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1">
               <div className="flex items-center gap-1 text-[9px] font-bold text-accent uppercase tracking-tight">
                 <Truck className="w-2.5 h-2.5" />
-                Fastest
+                Ship
               </div>
               <p className="text-sm font-bold text-white">{delivery}d</p>
-              <p className="text-[8px] text-muted-foreground">Other</p>
+              <p className="text-[8px] text-muted-foreground">Delivery</p>
             </div>
 
             <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1">
@@ -69,8 +70,8 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
                 <ShieldCheck className="w-2.5 h-2.5" />
                 Trust
               </div>
-              <p className="text-sm font-bold text-white">{trust}</p>
-              <p className="text-[8px] text-muted-foreground">{product.platform}</p>
+              <p className="text-sm font-bold text-white">{trust}%</p>
+              <p className="text-[8px] text-muted-foreground">Rating</p>
             </div>
           </div>
 
@@ -81,7 +82,7 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
               <span className="text-xs text-muted-foreground">({reviews})</span>
             </div>
             <button className="text-[11px] font-bold text-accent hover:text-white transition-colors flex items-center gap-1">
-              Compare 1 sellers
+              {platformCount > 1 ? `Selling on ${platformCount} platforms` : `Buy on ${product.platform}`}
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>

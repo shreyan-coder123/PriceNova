@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { searchProductNova, OrchestratorOutput } from "@/ai/flows/live-scraper-flow";
 import { ProductResultCard } from "./ProductResultCard";
-import { Sparkles, Lock, RefreshCcw } from "lucide-react";
+import { RefreshCcw, Lock } from "lucide-react";
 import { incrementSearchCount, getSearchCount, isUserPro, setProStatus } from "@/lib/search-store";
 import { Button } from "@/components/ui/button";
 
@@ -82,18 +82,22 @@ export function SearchResults({ query }: SearchResultsProps) {
     );
   }
 
-  // Flatten products for a clean grid view as seen in the reference image
-  const allProducts = results?.matchedGroups.flatMap(g => g.products) || [];
+  const groups = results?.matchedGroups || [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {allProducts.map((product, idx) => (
-        <ProductResultCard 
-          key={`${product.platform}-${idx}`} 
-          product={product} 
-          isBestValue={idx === 0}
-        />
-      ))}
+      {groups.map((group, idx) => {
+        // Find the best offer in the group (lowest price)
+        const bestOffer = [...group.products].sort((a, b) => a.price - b.price)[0];
+        return (
+          <ProductResultCard 
+            key={group.groupId} 
+            product={bestOffer} 
+            isBestValue={idx === 0}
+            platformCount={group.products.length}
+          />
+        );
+      })}
     </div>
   );
 }
