@@ -73,10 +73,10 @@ I have fetched real-time shopping results for: "{{query}}" from Google Shopping.
 YOUR TASK:
 1. Analyze the raw shopping results provided below.
 2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
-3. For each group, the "products" array should contain the offers for that specific item across different sources.
+3. For each group, the "products" array should contain the offers for that specific item across different sources (Amazon, Flipkart, etc.).
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
-5. Standardize product titles to be professional and brand-heavy (e.g., "Campus TRINO Women Sneakers"). DO NOT use generic names like "Standard Edition".
-6. If a product description is missing in the raw data, generate a realistic 1-2 sentence description.
+5. Standardize product titles to be professional and brand-heavy (e.g., "Campus TRINO Women Sneakers"). DO NOT use generic names like "Standard Edition" or just "Shoes".
+6. Use the highest quality thumbnail available as the imageUrl.
 7. For deliveryDays and trustScore, use realistic estimates based on the source (e.g., Amazon/Flipkart: 2-4 days, 90-95% trust; smaller sites: 5-7 days, 70-80% trust).
 
 RAW RESULTS FROM SEARCH:
