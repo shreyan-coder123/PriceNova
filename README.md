@@ -21,19 +21,25 @@ PriceNova is a high-performance shopping comparison engine built with Next.js 15
 - **Icons**: Lucide React
 - **Storage**: Local Storage (Search counts & Pro status)
 
-## 📦 Deployment on Vercel
+## 📦 How to Push to GitHub
 
-1. Create a new repository on GitHub.
-2. Push this code to your repository:
-   ```bash
-   git init
-   git remote add origin https://github.com/shreyan-coder123/PriceNova.git
-   git add .
-   git commit -m "Initial commit"
-   git push -u origin main
-   ```
-3. Go to [Vercel](https://vercel.com), import the repository, and deploy.
-4. Add your `GOOGLE_GENAI_API_KEY` to the Vercel Environment Variables.
+To push this code to your repository, open your terminal in this project's root folder and run:
+
+```bash
+git init
+git remote add origin https://github.com/shreyan-coder123/PriceNova.git
+git add .
+git commit -m "Initial commit: PriceNova AI Shopping Comparison"
+git push -u origin main
+```
+
+## 🚀 Deployment on Vercel
+
+1. Go to [Vercel](https://vercel.com).
+2. Click **Add New** > **Project**.
+3. Import your `PriceNova` repository from GitHub.
+4. Add your `GOOGLE_GENAI_API_KEY` to the Environment Variables.
+5. Click **Deploy**.
 
 ## 📄 License
 

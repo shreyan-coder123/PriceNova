@@ -143,12 +143,16 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       })
       .filter(g => g.products.length > 0); 
 
-    // PRIORITIZE groups with 3 or more platform comparisons
+    // CRITICAL: PRIORITIZE groups with 3 or more platform comparisons
     matchedGroups.sort((a, b) => {
       const aCount = a.products.length;
       const bCount = b.products.length;
+      
+      // First, prioritize groups with 3+ platforms
       if (aCount >= 3 && bCount < 3) return -1;
       if (bCount >= 3 && aCount < 3) return 1;
+      
+      // Then sort by most platforms
       return bCount - aCount;
     });
 
