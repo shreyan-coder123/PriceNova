@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This file handles real-time product data fetching and intelligent grouping.
@@ -40,7 +39,7 @@ const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nyka
  * Fetches real shopping results from SerpApi
  */
 async function fetchLiveShoppingData(query: string) {
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in&num=60`;
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in&num=100`;
   
   try {
     const response = await fetch(url);
@@ -62,8 +61,8 @@ function getGroupingKey(title: string): string {
   const noiseWords = [
     'pack', 'of', 'blue', 'black', 'red', 'green', 'ink', 'pen', 'set', 'pcs', 
     'genuine', 'original', 'free', 'shipping', 'multi', 'color', 'new', 'latest',
-    'buy', 'online', 'india', 'best', 'price', '157', 'ub', 'eye', 'rollerball', 
-    'micro', 'fine', 'women', 'men', 'certified', 'authentic'
+    'buy', 'online', 'india', 'best', 'price', 'eye', 'rollerball', 
+    'micro', 'fine', 'women', 'men', 'certified', 'authentic', '157', 'ub'
   ];
   
   const clean = title.toLowerCase()
@@ -71,8 +70,8 @@ function getGroupingKey(title: string): string {
     .split(/\s+/)
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
-  // Return the first 3 core identifying words to cluster variants across platforms
-  // This increases the chance of matches between Amazon "Uni-ball Pen" and Flipkart "UniBall Eye Pen"
+  // Return the first 2-3 core identifying words to cluster variants across platforms
+  // This drastically increases the chance of matches between Amazon and Flipkart
   return clean.slice(0, 3).join(' ');
 }
 
@@ -113,46 +112,55 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       };
 
       const groupKey = getGroupingKey(item.title);
-      if (!groupsMap.has(groupKey)) {
-        groupsMap.set(groupKey, []);
-      }
-      groupsMap.get(groupKey)?.push(product);
-    });
-
-    const matchedGroups = Array.from(groupsMap.entries()).map(([key, products], index) => {
-      // Sort within the group by price (ascending)
-      const sortedProducts = products.sort((a, b) => a.price - b.price);
-      
-      // Ensure unique platforms per group for comparison
-      const uniquePlatformProducts = [];
-      const seenPlatforms = new Set();
-      
-      for (const p of sortedProducts) {
-        if (!seenPlatforms.has(p.platform)) {
-          uniquePlatformProducts.push(p);
-          seenPlatforms.add(p.platform);
+      if (groupKey) {
+        if (!groupsMap.has(groupKey)) {
+          groupsMap.set(groupKey, []);
         }
+        groupsMap.get(groupKey)?.push(product);
       }
-
-      return {
-        groupId: `group-${index}`,
-        products: uniquePlatformProducts,
-      };
     });
 
-    // Sort to prioritize groups with the MOST platforms (best comparisons)
+    const matchedGroups = Array.from(groupsMap.entries())
+      .map(([key, products], index) => {
+        // Sort within the group by price (ascending)
+        const sortedProducts = products.sort((a, b) => a.price - b.price);
+        
+        // Ensure unique platforms per group for comparison
+        const uniquePlatformProducts = [];
+        const seenPlatforms = new Set();
+        
+        for (const p of sortedProducts) {
+          if (!seenPlatforms.has(p.platform)) {
+            uniquePlatformProducts.push(p);
+            seenPlatforms.add(p.platform);
+          }
+        }
+
+        return {
+          groupId: `group-${index}`,
+          products: uniquePlatformProducts,
+        };
+      })
+      .filter(g => g.products.length > 0); // Only keep groups with at least 1 product
+
+    // Sort to prioritize groups with the HIGHEST platform diversity (3+ platforms)
     matchedGroups.sort((a, b) => {
       const aCount = a.products.length;
       const bCount = b.products.length;
       
+      // If one group has 3+ platforms and the other doesn't, put the 3+ one first
+      if (aCount >= 3 && bCount < 3) return -1;
+      if (bCount >= 3 && aCount < 3) return 1;
+      
+      // Otherwise sort by count descending, then by price
       if (bCount !== aCount) {
-        return bCount - aCount; // Put groups with 3+ platforms first
+        return bCount - aCount;
       }
       
-      return a.products[0].price - b.products[0].price; // Then sort by lowest price
+      return a.products[0].price - b.products[0].price;
     });
 
-    return { matchedGroups };
+    return { matchedGroups: matchedGroups.slice(0, 15) }; // Return top 15 groups
   } catch (error: any) {
     console.error('Orchestrator Error:', error);
     throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
