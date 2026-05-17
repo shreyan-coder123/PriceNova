@@ -18,7 +18,7 @@ const ProductSchema = z.object({
     .describe('The e-commerce platform the product is from (e.g., "Amazon", "Flipkart").'),
   title: z.string().describe('The title of the product.'),
   description: z.string().optional().describe('An optional description of the product.'),
-  price: z.number().describe('The price of the product.'),
+  price: z.coerce.number().describe('The price of the product.'),
   productUrl: z.string().url().describe('The URL to the product page.'),
   imageUrl: z.string().url().optional().describe('An optional URL to the product image.'),
   specifications: z
@@ -56,14 +56,7 @@ const productMatcherPrompt = ai.definePrompt({
   config: {
     temperature: 0.1,
   },
-  prompt: `You are an intelligent AI product matcher. Your primary goal is to analyze a given list of products from various e-commerce platforms and accurately group together products that are identical. This means they are the same model, variant (e.g., storage, color), and type.
-
-Instructions:
-1. Carefully examine each product's details provided below.
-2. Group products that refer to the exact same item. 
-3. Products with different variants (e.g., different storage or colors) should be in separate groups.
-4. Assign a unique 'groupId' to each group.
-5. Return the groups with the original product details.
+  prompt: `You are an intelligent AI product matcher. Your primary goal is to analyze a given list of products and accurately group identical items.
 
 Input Products:
 {{#each products}}
@@ -71,8 +64,6 @@ Input Products:
   Title: {{title}}
   Price: {{price}}
   Description: {{description}}
-  URL: {{productUrl}}
-  Specs: {{specifications}}
 ---
 {{/each}}`,
 });
@@ -86,13 +77,9 @@ const aiProductMatcherFlow = ai.defineFlow(
   async (input) => {
     try {
       const { output } = await productMatcherPrompt(input);
-      if (!output) {
-        throw new Error('AI failed to generate a matching response.');
-      }
-      return output;
+      return output || { matchedGroups: [] };
     } catch (error) {
       console.error('Error in aiProductMatcherFlow:', error);
-      // Fallback: Each product in its own group
       return {
         matchedGroups: input.products.map((p, i) => ({
           groupId: `group-${i}`,

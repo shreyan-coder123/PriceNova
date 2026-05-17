@@ -13,26 +13,26 @@ import {z} from 'genkit';
 const ProductOfferSchema = z.object({
   platform: z.string().describe('The name of the e-commerce platform.'),
   productTitle: z.string().describe('The title of the product.'),
-  price: z.number().describe('The price of the product.'),
-  discount: z.number().optional().describe('The discount percentage or absolute amount, if any.'),
-  rating: z.number().optional().describe('The average customer rating for the product.'),
-  numberOfReviews: z.number().optional().describe('The total number of reviews for the product.'),
-  deliveryEstimate: z.string().describe('The estimated delivery time or details.'),
+  price: z.coerce.number().describe('The price of the product.'),
+  discount: z.number().optional().describe('The discount percentage.'),
+  rating: z.number().optional().describe('The average customer rating.'),
+  numberOfReviews: z.number().optional().describe('The total number of reviews.'),
+  deliveryEstimate: z.string().describe('The estimated delivery time.'),
   sellerName: z.string().optional().describe('The name of the seller.'),
   stockStatus: z.string().describe('The current stock availability status.'),
   productUrl: z.string().url().describe('The URL to the product page.'),
 });
 
 const AISavingsAdvisorInputSchema = z.object({
-  productOffers: z.array(ProductOfferSchema).min(1).describe('A list of product offers from various platforms for comparison.'),
+  productOffers: z.array(ProductOfferSchema).min(1).describe('A list of product offers.'),
 });
 export type AISavingsAdvisorInput = z.infer<typeof AISavingsAdvisorInputSchema>;
 
 const AISavingsAdvisorOutputSchema = z.object({
   recommendationSummary: z.string().describe('A summary explaining the best overall deal.'),
-  bestOfferPlatform: z.string().describe('The platform name where the best offer is found.'),
-  bestOfferProductTitle: z.string().describe('The title of the product corresponding to the best offer.'),
-  reasoning: z.string().describe('A brief explanation of why this offer was selected as the best.'),
+  bestOfferPlatform: z.string().describe('The platform name.'),
+  bestOfferProductTitle: z.string().describe('The title of the best product.'),
+  reasoning: z.string().describe('Explanation of why this offer was selected.'),
 });
 export type AISavingsAdvisorOutput = z.infer<typeof AISavingsAdvisorOutputSchema>;
 
@@ -44,22 +44,14 @@ const advisorPrompt = ai.definePrompt({
   config: {
     temperature: 0.2,
   },
-  prompt: `You are an intelligent shopping advisor for PriceNova. Your goal is to analyze a list of product offers and recommend the best overall deal. 
+  prompt: `You are an intelligent shopping advisor. Identify the best deal from these offers:
 
-Consider price, delivery speed, and ratings. 
-
-Product Offers:
 {{#each productOffers}}
 Platform: {{this.platform}}
 Title: {{this.productTitle}}
 Price: {{this.price}}
-Rating: {{this.rating}}
-Delivery: {{this.deliveryEstimate}}
-Stock: {{this.stockStatus}}
 ---
-{{/each}}
-
-Identify the best offer and provide reasoning.`,
+{{/each}}`,
 });
 
 const aiSavingsAdvisorFlow = ai.defineFlow(
@@ -77,10 +69,10 @@ const aiSavingsAdvisorFlow = ai.defineFlow(
       console.error('Error in aiSavingsAdvisorFlow:', error);
       const cheapest = [...input.productOffers].sort((a, b) => a.price - b.price)[0];
       return {
-        recommendationSummary: `We recommend buying from ${cheapest.platform} as it offers the lowest price of ₹${cheapest.price.toLocaleString()}.`,
+        recommendationSummary: `We recommend buying from ${cheapest.platform} for the best price.`,
         bestOfferPlatform: cheapest.platform,
         bestOfferProductTitle: cheapest.productTitle,
-        reasoning: "Cheapest price found among all available platforms.",
+        reasoning: "Cheapest price found in current simulation.",
       };
     }
   }
