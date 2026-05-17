@@ -12,7 +12,7 @@ const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
-  title: z.string().describe('The full specific title starting with BRAND then MODEL (e.g., "CAMPUS TRINO Women Sneakers")'),
+  title: z.string().describe('The full specific title starting with BRAND then MODEL in ALL CAPS (e.g., "CAMPUS TRINO Women Sneakers")'),
   description: z.string().describe('A realistic product description.'),
   price: z.coerce.number().describe('The price in INR (number only)'),
   productUrl: z.string().describe('The direct link to the product'),
