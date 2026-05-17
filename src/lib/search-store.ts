@@ -1,7 +1,6 @@
-
 "use client";
 
-const LIMIT = 10;
+const LIMIT = 20; // Synced with UI
 const STORAGE_KEY = "pricenova_searches";
 
 export function getSearchCount(): number {
