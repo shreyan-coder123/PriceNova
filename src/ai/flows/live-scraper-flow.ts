@@ -5,14 +5,14 @@
  * Gemini to group identical products into matched sets for comparison.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAIPlugin } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
-  title: z.string().describe('The full specific title starting with BRAND then MODEL in ALL CAPS (e.g., "CAMPUS TRINO Women Sneakers")'),
+  title: z.string().describe('The professional title: BRAND (ALL CAPS) followed by MODEL (e.g., "CAMPUS TRINO Women Sneakers")'),
   description: z.string().describe('A realistic product description.'),
   price: z.coerce.number().describe('The price in INR (number only)'),
   productUrl: z.string().describe('The direct link to the product'),
@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAIPlugin.model('gemini-1.5-flash'),
   input: { 
     schema: z.object({ 
       query: z.string(),
@@ -70,19 +70,23 @@ const orchestratorPrompt = ai.definePrompt({
   prompt: `You are the PriceNova AI Market Intelligence Orchestrator. 
 I have fetched real-time shopping results for: "{{query}}" from Google Shopping.
 
-YOUR TASK:
+YOUR MISSION: Provide the most professional market comparison data possible.
+
+STRICT TITLING RULE:
+Every product "title" in your output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL name.
+- Example: "Trino Women's Running Shoes" -> Output: "CAMPUS TRINO Women Sneakers"
+- Example: "Apple iPhone 16 Pro 256GB" -> Output: "APPLE iPhone 16 Pro 256GB"
+- Example: "Red Tape Men Sneakers" -> Output: "RED TAPE Men Sneakers"
+
+If the brand is not explicitly in the input title, INFER IT from the context or platform. DO NOT use generic names.
+
+DATA GROUPING:
 1. Analyze the raw shopping results provided below.
 2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
-3. For each group, the "products" array should contain the offers for that specific item across different sources.
-4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
-5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL name.
-   - Example Input: "Trino Women's Running Shoes" -> Example Output Title: "CAMPUS TRINO Women Sneakers"
-   - Example Input: "iPhone 16 128GB Blue" -> Example Output Title: "APPLE iPhone 16 128GB"
-   You MUST infer the brand if it's not explicitly in the title but obvious from the source/context. DO NOT use generic names.
-6. Use the highest quality thumbnail available.
-7. For deliveryDays and trustScore, use realistic estimates (Amazon/Flipkart: 2-4 days, 95% trust; smaller sites: 5-7 days, 75% trust).
+3. Extract price as a raw number. (e.g., "₹4,599" -> 4599).
+4. For deliveryDays and trustScore, use realistic estimates (Top sites: 2-4 days, 95% trust; others: 5-7 days, 75% trust).
 
-RAW RESULTS FROM SEARCH:
+RAW RESULTS:
 {{#each rawResults}}
 - Source: {{source}}
   Title: {{title}}
