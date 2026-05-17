@@ -1,46 +1,30 @@
+
 # PriceNova | Next-Gen AI Market Intelligence
 
-PriceNova is a high-performance shopping comparison engine built with Next.js 15, Genkit, and Tailwind CSS. It allows users to compare product prices across major Indian marketplaces in real-time with AI-driven intelligence.
+PriceNova is a high-performance shopping comparison engine built with Next.js 15. It allows users to compare product prices across major marketplaces in real-time.
 
-## 🚀 Key Features
+## 🚀 Hosting Instructions (Vercel + GitHub)
 
-- **Multi-Platform Real-time Comparison**: Instantly matches and compares products across Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, and Reliance Digital.
-- **AI-Powered Matching Engine**: Uses Google Gemini models to intelligently group identical products even when retailer titles and descriptions vary significantly.
-- **Search Limit & Monetization**: 
-  - 10 free high-quality searches for new users.
-  - ₹500 Lifetime Pro Membership for unlimited access.
-- **UPI Payment Workflow**: Professional upgrade flow with UPI payment instructions (Google Pay/PhonePe) and mandatory screenshot proof verification.
-- **Mobile-First App Experience**: Optimized PWA-ready meta tags and UI interactions for a native app-like feel.
-- **Intelligent Sorting**: Prioritizes results that offer comparisons from 3 or more platforms to ensure maximum value for the user.
+If you cannot run terminal commands, follow these steps to host your website:
 
-## 🛠 Tech Stack
+### 1. Upload Code to GitHub (No Commands)
+1. Go to [GitHub.com](https://github.com) and log in.
+2. Go to your repository: `https://github.com/shreyan-coder123/PriceNova.git`
+3. Click the **"Add file"** button -> **"Upload files"**.
+4. Drag and drop all the files from this project folder into the browser.
+5. Click **"Commit changes"** at the bottom.
 
-- **Framework**: Next.js 15 (App Router)
-- **AI**: Genkit with Google Gemini 1.5 Flash
-- **Styling**: Tailwind CSS & ShadCN UI
-- **Icons**: Lucide React
-- **Storage**: Local Storage (Search counts & Pro status)
+### 2. Connect to Vercel
+1. Go to [Vercel.com](https://vercel.com) and log in with GitHub.
+2. Click **"Add New"** -> **"Project"**.
+3. Find your `PriceNova` repository and click **"Import"**.
+4. In the **Environment Variables** section, add your `GOOGLE_GENAI_API_KEY`.
+5. Click **"Deploy"**.
 
-## 📦 How to Push to GitHub
+## 🛠 Key Features
+- **3+ Platform Comparisons**: Aggressive matching engine groups products from Amazon, Flipkart, Myntra, etc.
+- **₹500 Pro Upgrade**: Users get 10 free searches, then must pay via UPI (9849575920).
+- **Screenshot Verification**: Users must upload a payment proof screenshot to unlock Pro.
+- **Mobile-First Experience**: Optimized for an app-like feel.
 
-To push this code to your repository, open your terminal in this project's root folder and run:
-
-```bash
-git init
-git remote add origin https://github.com/shreyan-coder123/PriceNova.git
-git add .
-git commit -m "Initial commit: PriceNova AI Shopping Comparison"
-git push -u origin main
-```
-
-## 🚀 Deployment on Vercel
-
-1. Go to [Vercel](https://vercel.com).
-2. Click **Add New** > **Project**.
-3. Import your `PriceNova` repository from GitHub.
-4. Add your `GOOGLE_GENAI_API_KEY` to the Environment Variables.
-5. Click **Deploy**.
-
-## 📄 License
-
-Created for the PriceNova Intelligence System.
+Created for shreyan-coder123.

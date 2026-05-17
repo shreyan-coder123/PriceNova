@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file handles real-time product data fetching and aggressive grouping.
@@ -66,7 +67,7 @@ function getGroupingKey(title: string): string {
     'buy', 'online', 'india', 'best', 'price', 'micro', 'fine', 'women', 'men', 
     'certified', 'authentic', '157', 'ub', 'mobile', 'phone', 'smartphone', 
     'electronics', 'official', 'warranty', '128gb', '256gb', '512gb', 'ram', 'plus',
-    'inch', 'screen', 'apple', 'samsung', 'uniball', 'uni-ball', 'rollerball'
+    'inch', 'screen', 'apple', 'samsung', 'uniball', 'uni-ball', 'rollerball', 'pro', 'max'
   ];
   
   const clean = title.toLowerCase()
@@ -74,8 +75,9 @@ function getGroupingKey(title: string): string {
     .split(/\s+/)
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
-  // Return the first 2-3 core identifying words to cluster variants across platforms
-  return clean.slice(0, 3).join(' ');
+  // Return the core identifying words to cluster variants across platforms
+  // We use the first 4 words for a better balance between accuracy and matching
+  return clean.slice(0, 4).join(' ');
 }
 
 /**
