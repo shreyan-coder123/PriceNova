@@ -3,7 +3,7 @@
  * @fileOverview This file implements the AI product matching flow.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAIPlugin } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ProductSchema = z.object({
@@ -37,7 +37,7 @@ export type ProductMatcherOutput = z.infer<typeof ProductMatcherOutputSchema>;
 
 const productMatcherPrompt = ai.definePrompt({
   name: 'productMatcherPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAIPlugin.model('gemini-1.5-flash'),
   input: { schema: ProductMatcherInputSchema },
   output: { schema: ProductMatcherOutputSchema },
   config: {
