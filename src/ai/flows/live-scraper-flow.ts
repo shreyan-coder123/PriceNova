@@ -1,27 +1,26 @@
 'use server';
 /**
- * @fileOverview This flow is the main PriceNova AI Orchestrator.
- * It fetches real-time data from SerpApi (Google Shopping) and uses
- * Gemini to group identical products into matched sets for comparison.
+ * @fileOverview This file handles the real-time product data fetching and processing.
+ * The AI agent has been removed to ensure stability and resolve model resolution errors.
+ * It now uses a direct mapping logic to provide consistent search results.
  */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
 
 const ProductSchema = z.object({
-  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
-  title: z.string().describe('The professional title: BRAND (ALL CAPS) followed by MODEL'),
-  description: z.string().describe('A realistic product description.'),
-  price: z.coerce.number().describe('The price in INR (number only)'),
-  productUrl: z.string().describe('The direct link to the product'),
-  imageUrl: z.string().describe('The thumbnail URL'),
-  category: z.string().describe('Product category'),
-  rating: z.number().optional().describe('Average customer rating'),
-  reviewsCount: z.number().optional().describe('Total number of reviews'),
-  deliveryDays: z.number().describe('Estimated delivery in days'),
-  trustScore: z.number().describe('Reliability score (0-100)'),
+  platform: z.string(),
+  title: z.string(),
+  description: z.string(),
+  price: z.coerce.number(),
+  productUrl: z.string(),
+  imageUrl: z.string(),
+  category: z.string(),
+  rating: z.number().optional(),
+  reviewsCount: z.number().optional(),
+  deliveryDays: z.number(),
+  trustScore: z.number(),
 });
 
 const MatchedGroupSchema = z.object({
@@ -30,7 +29,7 @@ const MatchedGroupSchema = z.object({
 });
 
 const OrchestratorOutputSchema = z.object({
-  matchedGroups: z.array(MatchedGroupSchema).describe('Products grouped by identity.'),
+  matchedGroups: z.array(MatchedGroupSchema),
 });
 
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
@@ -44,88 +43,63 @@ async function fetchLiveShoppingData(query: string) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`SerpApi request failed with status ${response.status}`);
+      throw new Error(`Market data request failed with status ${response.status}`);
     }
     const data = await response.json();
     return data.shopping_results || [];
   } catch (error) {
-    console.error('SerpApi Fetch Error:', error);
+    console.error('Market Data Fetch Error:', error);
     throw error;
   }
 }
 
-const orchestratorPrompt = ai.definePrompt({
-  name: 'orchestratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { 
-    schema: z.object({ 
-      query: z.string(),
-      rawResults: z.array(z.any())
-    }) 
-  },
-  output: { schema: OrchestratorOutputSchema },
-  config: {
-    temperature: 0.1,
-  },
-  prompt: `You are the PriceNova AI Market Intelligence Orchestrator. 
-I have fetched real-time shopping results for: "{{query}}" from Google Shopping.
-
-YOUR MISSION: Provide the most professional market comparison data possible.
-
-STRICT TITLING RULE:
-Every product "title" in your output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL name.
-If the brand is not explicitly in the input title, INFER IT from the context or platform. DO NOT use generic names.
-
-DATA GROUPING:
-1. Analyze the raw shopping results provided below.
-2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
-3. Extract price as a raw number. (e.g., "₹4,599" -> 4599).
-4. For deliveryDays and trustScore, use realistic estimates (Top sites: 2-4 days, 95% trust; others: 5-7 days, 75% trust).
-
-RAW RESULTS:
-{{#each rawResults}}
-- Source: {{source}}
-  Title: {{title}}
-  Price: {{price}}
-  Link: {{link}}
-  Thumbnail: {{thumbnail}}
-  Rating: {{rating}}
-  Reviews: {{reviews}}
----
-{{/each}}`,
-});
-
-const priceNovaOrchestratorFlow = ai.defineFlow(
-  {
-    name: 'priceNovaOrchestratorFlow',
-    inputSchema: z.object({ query: z.string() }),
-    outputSchema: OrchestratorOutputSchema,
-  },
-  async (input) => {
-    try {
-      const rawResults = await fetchLiveShoppingData(input.query);
-      
-      if (!rawResults || rawResults.length === 0) {
-        throw new Error('No real-time market data found for this product.');
-      }
-
-      const { output } = await orchestratorPrompt({ 
-        query: input.query, 
-        rawResults: rawResults.slice(0, 30) 
-      });
-      
-      if (!output || !output.matchedGroups || output.matchedGroups.length === 0) {
-        throw new Error('Our AI engine could not group the market data. Please try a different search.');
-      }
-
-      return output;
-    } catch (error: any) {
-      console.error('Orchestrator Processing Error:', error);
-      throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
-    }
-  }
-);
-
+/**
+ * Orchestrates the search process without an AI agent.
+ * Maps raw SerpApi results directly to the application schema.
+ */
 export async function searchProductNova(query: string): Promise<OrchestratorOutput> {
-  return priceNovaOrchestratorFlow({ query });
+  try {
+    const rawResults = await fetchLiveShoppingData(query);
+    
+    if (!rawResults || rawResults.length === 0) {
+      throw new Error('No real-time market data found for this product.');
+    }
+
+    // Process raw results into the expected format
+    const matchedGroups = rawResults.slice(0, 40).map((item: any, index: number) => {
+      // Clean price string (e.g., "₹4,599" -> 4599)
+      const priceStr = String(item.price || "0").replace(/[^0-9.]/g, "");
+      const price = parseFloat(priceStr) || 0;
+      
+      // Basic heuristic for delivery and trust
+      const platform = item.source || "Marketplace";
+      const isTopSite = ["Amazon", "Flipkart", "Myntra", "Croma", "Ajio"].some(site => 
+        platform.toLowerCase().includes(site.toLowerCase())
+      );
+
+      const product = {
+        platform: platform,
+        title: item.title,
+        description: item.description || `Available on ${platform}. Professional grade ${item.title} with competitive pricing.`,
+        price: price,
+        productUrl: item.link,
+        imageUrl: item.thumbnail,
+        category: item.category || "General",
+        rating: item.rating ? parseFloat(item.rating) : 4.0,
+        reviewsCount: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, "")) : 0,
+        deliveryDays: isTopSite ? 3 : 5,
+        trustScore: isTopSite ? 96 : 78,
+      };
+
+      return {
+        groupId: `group-${index}`,
+        products: [product],
+      };
+    });
+
+    return { matchedGroups };
+  } catch (error: any) {
+    console.error('Orchestrator Error:', error);
+    throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
+  }
 }

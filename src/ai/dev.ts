@@ -1,6 +1,5 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/ai-savings-advisor-flow.ts';
-import '@/ai/flows/ai-product-matcher-flow.ts';
+// Flows that don't depend on the failing Gemini agent configuration
 import '@/ai/flows/live-scraper-flow.ts';
