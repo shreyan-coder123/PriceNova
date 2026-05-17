@@ -5,14 +5,14 @@
  * Gemini to group identical products into matched sets for comparison.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAIPlugin } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
-  title: z.string().describe('The full specific title of the product including brand and model (e.g., "Campus TRINO Women Sneakers")'),
+  title: z.string().describe('The full specific title of the product starting with Brand then Model (e.g., "Campus TRINO Women Sneakers")'),
   description: z.string().describe('A realistic product description.'),
   price: z.coerce.number().describe('The price in INR (number only)'),
   productUrl: z.string().describe('The direct link to the product'),
@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAIPlugin.model('gemini-1.5-flash'),
   input: { 
     schema: z.object({ 
       query: z.string(),
@@ -76,8 +76,9 @@ YOUR TASK:
 3. For each group, the "products" array should contain the offers for that specific item across different sources (Amazon, Flipkart, etc.).
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
 5. Standardize product titles to be professional and brand-heavy (e.g., "Campus TRINO Women Sneakers", "Apple iPhone 16 Pro 256GB"). 
+   THE TITLE MUST START WITH THE BRAND NAME FOLLOWED BY THE MODEL NAME.
    DO NOT use generic names like "Standard Edition", "Latest Model", or just "Shoes". 
-   The title MUST include the brand and the specific model name as shown in the example.
+   If the search result title is messy, clean it up to follow this "Brand Model" format.
 6. Use the highest quality thumbnail available as the imageUrl.
 7. For deliveryDays and trustScore, use realistic estimates based on the source (e.g., Amazon/Flipkart: 2-4 days, 90-95% trust; smaller sites: 5-7 days, 70-80% trust).
 
