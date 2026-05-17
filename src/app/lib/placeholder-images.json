@@ -1,0 +1,29 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Futuristic cosmic background",
+      "imageUrl": "https://picsum.photos/seed/nova1/1920/1080",
+      "imageHint": "cosmic nebula"
+    },
+    {
+      "id": "iphone",
+      "description": "Latest smartphone",
+      "imageUrl": "https://picsum.photos/seed/phone/400/400",
+      "imageHint": "smartphone"
+    },
+    {
+      "id": "laptop",
+      "description": "Gaming laptop",
+      "imageUrl": "https://picsum.photos/seed/laptop/400/400",
+      "imageHint": "laptop"
+    },
+    {
+      "id": "shoes",
+      "description": "Running shoes",
+      "imageUrl": "https://picsum.photos/seed/shoes/400/400",
+      "imageHint": "sneakers"
+    }
+  ]
+}
