@@ -62,7 +62,7 @@ function normalizeTitle(title: string): string {
     .replace(/[^a-z0-9\s]/g, '')
     .split(' ')
     .filter(word => word.length > 2)
-    .slice(0, 4)
+    .slice(0, 5) // Slightly longer slice for better specificity
     .join(' ');
 }
 
@@ -78,28 +78,31 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
     }
 
     const groupsMap = new Map<string, any[]>();
+    const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital"];
 
-    rawResults.slice(0, 50).forEach((item: any) => {
+    rawResults.forEach((item: any) => {
       const priceStr = String(item.price || "0").replace(/[^0-9.]/g, "");
       const price = parseFloat(priceStr) || 0;
       
-      const platform = item.source || "Marketplace";
-      const isTopSite = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital"].some(site => 
-        platform.toLowerCase().includes(site.toLowerCase())
-      );
+      const source = item.source || "Marketplace";
+      
+      // Determine if source is one of our target platforms
+      const matchedPlatform = TARGET_PLATFORMS.find(p => 
+        source.toLowerCase().includes(p.toLowerCase())
+      ) || source;
 
       const product = {
-        platform: platform,
+        platform: matchedPlatform,
         title: item.title,
-        description: item.description || `Verified offer from ${platform}. High-quality ${item.title} available with fast shipping.`,
+        description: item.description || `Verified offer from ${matchedPlatform}. High-quality ${item.title} available with fast shipping.`,
         price: price,
         productUrl: item.link,
         imageUrl: item.thumbnail,
         category: item.category || "General",
         rating: item.rating ? parseFloat(item.rating) : 4.0,
         reviewsCount: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, "")) : 0,
-        deliveryDays: isTopSite ? 2 : 4,
-        trustScore: isTopSite ? 98 : 82,
+        deliveryDays: TARGET_PLATFORMS.includes(matchedPlatform) ? 2 : 4,
+        trustScore: TARGET_PLATFORMS.includes(matchedPlatform) ? 98 : 82,
       };
 
       const groupKey = normalizeTitle(item.title);
@@ -109,13 +112,35 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       groupsMap.get(groupKey)?.push(product);
     });
 
-    const matchedGroups = Array.from(groupsMap.entries()).map(([key, products], index) => ({
-      groupId: `group-${index}`,
-      products: products.sort((a, b) => a.price - b.price),
-    }));
+    const matchedGroups = Array.from(groupsMap.entries()).map(([key, products], index) => {
+      // Sort products by price within the group
+      const sortedProducts = products.sort((a, b) => a.price - b.price);
+      
+      // To truly "compare", we ensure that the group has a unique platform entry where possible
+      const uniquePlatformProducts = [];
+      const seenPlatforms = new Set();
+      
+      for (const p of sortedProducts) {
+        if (!seenPlatforms.has(p.platform)) {
+          uniquePlatformProducts.push(p);
+          seenPlatforms.add(p.platform);
+        }
+      }
+
+      return {
+        groupId: `group-${index}`,
+        products: uniquePlatformProducts,
+      };
+    });
 
     // Sort groups so the best value (cheapest entry in cheapest group) comes first
-    matchedGroups.sort((a, b) => a.products[0].price - b.products[0].price);
+    // Also prioritize groups that have more platform comparisons
+    matchedGroups.sort((a, b) => {
+      if (b.products.length !== a.products.length) {
+        return b.products.length - a.products.length;
+      }
+      return a.products[0].price - b.products[0].price;
+    });
 
     return { matchedGroups };
   } catch (error: any) {

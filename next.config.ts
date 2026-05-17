@@ -55,6 +55,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'encrypted-tbn*.gstatic.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'm.media-amazon.com',
         port: '',
         pathname: '/**',
@@ -109,10 +115,16 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'encrypted-tbn*.gstatic.com',
+        hostname: '*.gstatic.com',
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.google.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
 };
