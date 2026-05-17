@@ -5,7 +5,7 @@
  * Gemini to group identical products into matched sets for comparison.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAIPlugin } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAIPlugin.model('gemini-1.5-flash'),
   input: { 
     schema: z.object({ 
       query: z.string(),
@@ -123,7 +123,6 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       return output;
     } catch (error: any) {
       console.error('Orchestrator Processing Error:', error);
-      // Ensure we pass a clean error message to the UI
       throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
     }
   }
