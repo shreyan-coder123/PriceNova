@@ -75,12 +75,10 @@ YOUR TASK:
 2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
 3. For each group, the "products" array should contain the offers for that specific item across different sources.
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
-5. MANDATORY BRAND NAMING: Every product title MUST start with the BRAND NAME followed by the MODEL.
-   - CORRECT: "Campus TRINO Women Sneakers"
-   - CORRECT: "Apple iPhone 16 Pro 256GB"
-   - INCORRECT: "Women's Sneakers (Trino)"
-   - INCORRECT: "Latest iPhone 16"
-   If the source title is messy, you MUST reconstruct it using this "[Brand] [Model] [Version/Specs]" format.
+5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME followed by the MODEL.
+   - Example Input: "Trino Women's Running Shoes" -> Example Output Title: "Campus TRINO Women Sneakers"
+   - Example Input: "iPhone 16 128GB Blue" -> Example Output Title: "Apple iPhone 16 128GB"
+   You MUST infer the brand if it's not explicitly in the title but obvious from the source/context.
 6. Use the highest quality thumbnail available.
 7. For deliveryDays and trustScore, use realistic estimates (Amazon/Flipkart: 2-4 days, 95% trust; smaller sites: 5-7 days, 75% trust).
 
