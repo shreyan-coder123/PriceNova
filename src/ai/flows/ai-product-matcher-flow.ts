@@ -3,10 +3,6 @@
  * @fileOverview This file implements the AI product matching flow.
  * It takes a list of products from various e-commerce platforms and uses AI
  * to identify and group identical items, even with varying titles or descriptions.
- *
- * - matchProducts - A function that handles the product matching process.
- * - ProductMatcherInput - The input type for the matchProducts function.
- * - ProductMatcherOutput - The return type for the matchProducts function.
  */
 
 import { ai } from '@/ai/genkit';

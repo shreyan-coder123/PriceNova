@@ -1,10 +1,6 @@
 'use server';
 /**
  * @fileOverview An AI shopping advisor that recommends the best product deal.
- *
- * - aiSavingsAdvisor - A function that generates a recommendation for the best product deal.
- * - AISavingsAdvisorInput - The input type for the aiSavingsAdvisor function.
- * - AISavingsAdvisorOutput - The return type for the aiSavingsAdvisor function.
  */
 
 import {ai} from '@/ai/genkit';
