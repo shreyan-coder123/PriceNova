@@ -1,7 +1,6 @@
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { AutoRefresh } from "@/components/AutoRefresh";
 
 export const metadata: Metadata = {
   title: 'PriceNova | Real-time AI Shopping Comparison',
@@ -39,7 +38,6 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="font-body antialiased selection:bg-primary/30">
-        <AutoRefresh />
         {children}
         <Toaster />
       </body>
