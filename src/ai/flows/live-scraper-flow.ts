@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This flow is the main PriceNova AI Orchestrator.
@@ -8,20 +7,25 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import placeholderData from '@/app/lib/placeholder-images.json';
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Ajio)'),
   title: z.string().describe('The full title of the product including brand and model'),
-  description: z.string().describe('A detailed realistic product description'),
+  description: z.string().describe('A detailed realistic product description (3-4 sentences)'),
   price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
-  imageUrl: z.string().describe('A realistic image URL using picsum.photos/seed/<id>/400/400'),
-  imageHint: z.string().describe('A 1-2 word search keyword for the product image (e.g. "fountain pen", "running shoes")'),
+  imageUrl: z.string().describe('The URL from the category in placeholder-images.json'),
+  imageHint: z.string().describe('A 1-2 word search keyword for the product image (e.g. "fountain pen", "gaming laptop")'),
+  category: z.string().describe('One of: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home'),
   specifications: z.string().optional().describe('Detailed specifications (e.g., Processor, RAM, Color, etc.)'),
   rating: z.number().optional().describe('Average customer rating (out of 5)'),
   reviewsCount: z.number().optional().describe('Total number of reviews'),
   stockStatus: z.string().optional().describe('Current availability status (e.g., In Stock, Only 2 left)'),
   deliveryEstimate: z.string().optional().describe('Estimated delivery time (e.g., Tomorrow, 3-5 days)'),
+  warranty: z.string().optional().describe('Warranty information (e.g., 1 Year Manufacturer Warranty)'),
+  sellerName: z.string().optional().describe('Name of the seller on the platform'),
+  sellerRating: z.number().optional().describe('Rating of the seller (out of 5)'),
 });
 
 const MatchedGroupSchema = z.object({
@@ -54,28 +58,34 @@ const orchestratorPrompt = ai.definePrompt({
 INSTRUCTIONS:
 1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
    - Use ACTUAL brands and specific models.
-   - For 'imageUrl', use 'https://picsum.photos/seed/<unique_id>/400/400'. Use a unique seed for each product.
-   - For 'imageHint', provide 1-2 words that best describe the visual item (e.g. "smartphone", "leather wallet").
+   - Assign each product to one of these CATEGORIES: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home.
+   - For 'imageHint', provide exactly 1-2 words that best describe the visual item (e.g. "smartphone", "leather wallet").
+   - For 'imageUrl', use the URL corresponding to the category:
+     * electronics: https://picsum.photos/seed/electronics/400/400
+     * mobile: https://picsum.photos/seed/mobile/400/400
+     * laptop: https://picsum.photos/seed/laptop/400/400
+     * shoes: https://picsum.photos/seed/shoes/400/400
+     * fashion: https://picsum.photos/seed/fashion/400/400
+     * stationery: https://picsum.photos/seed/stationery/400/400
+     * watch: https://picsum.photos/seed/watch/400/400
+     * beauty: https://picsum.photos/seed/beauty/400/400
+     * home: https://picsum.photos/seed/home/400/400
 
-2. RIGOROUS REALISTIC PRICING (INR):
-   - Everyday Stationery (Standard Pens/Pencils): ₹10 - ₹150.
-   - Premium Pens (Parker, Lamy): ₹300 - ₹5,000.
-   - Entry-level Electronics: ₹5,000 - ₹25,000.
-   - High-end Electronics: ₹30,000 - ₹2,50,000.
-   - Fashion/Sneakers: ₹400 - ₹15,000.
-   - MATCH THE PRICE TO THE EXACT MODEL AND CATEGORY.
+2. PRICING RULES (INR):
+   - Pens/Stationery: ₹10 - ₹500 (standard), ₹1,000+ (luxury).
+   - Phones: ₹10,000 - ₹1,50,000.
+   - Laptops: ₹30,000 - ₹2,50,000.
+   - Fashion: ₹500 - ₹10,000.
+   - MATCH THE PRICE TO THE EXACT MODEL.
 
-3. RICH PRODUCT DETAILS:
-   - Provide a realistic 'description' (2-3 sentences).
+3. RICH DETAILS:
+   - Provide a realistic 'description' (3-4 sentences).
    - Include 'specifications' as a comma-separated list.
-   - Generate realistic 'rating' and 'reviewsCount'.
-   - Provide a realistic 'stockStatus' and 'deliveryEstimate'.
+   - Generate 'rating', 'reviewsCount', 'warranty', 'sellerName', and 'sellerRating'.
 
 4. MATCH & GROUP: Analyze the simulated listings and group identical items (same brand, model, and variant) into matchedGroups.
 
-5. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.
-
-IMPORTANT: Ensure 'price' is a raw number. Generate at least 15 unique product entries.`,
+5. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -98,15 +108,18 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       let fallbackPrice = 499;
       let fallbackTitle = `${input.query} - Standard Edition`;
       let fallbackHint = "product";
+      let fallbackCategory = "electronics";
 
       if (q.includes('pen') || q.includes('pencil')) {
         fallbackPrice = 25;
         fallbackTitle = `Natraj Classic Pencil Pack`;
         fallbackHint = "pencil";
+        fallbackCategory = "stationery";
       } else if (q.includes('phone') || q.includes('mobile')) {
         fallbackPrice = 12999;
         fallbackTitle = `${input.query} (Entry Level)`;
         fallbackHint = "smartphone";
+        fallbackCategory = "mobile";
       }
 
       const platforms = ['Amazon', 'Flipkart', 'Croma', 'Ajio'];
@@ -117,16 +130,20 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
             products: platforms.map((p, i) => ({
               platform: p,
               title: fallbackTitle,
-              description: `Reliable ${input.query} with official warranty and great performance.`,
+              description: `Reliable ${input.query} with official warranty and great performance. Ideal for daily usage and comes with a durable build quality.`,
               price: Math.round(fallbackPrice * (1 + (i - 1) * 0.05)),
               productUrl: `https://${p.toLowerCase()}.com`,
-              imageUrl: `https://picsum.photos/seed/${fallbackTitle}-${p}/400/400`,
+              imageUrl: `https://picsum.photos/seed/${fallbackCategory}/400/400`,
               imageHint: fallbackHint,
+              category: fallbackCategory,
               specifications: 'Standard size, Durable, Lightweight',
               rating: 4.2 + (i * 0.1),
               reviewsCount: 1200 + (i * 500),
               stockStatus: 'In Stock',
-              deliveryEstimate: '2-3 Days'
+              deliveryEstimate: '2-3 Days',
+              warranty: '1 Year Manufacturer Warranty',
+              sellerName: `${p} Retail Pvt Ltd`,
+              sellerRating: 4.5
             }))
           }
         ],

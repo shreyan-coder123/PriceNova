@@ -1,15 +1,13 @@
-
 "use client";
 
-import { Product } from "@/ai/flows/ai-product-matcher-flow";
-import { ExternalLink, Star, Truck, ShoppingCart } from "lucide-react";
+import { ExternalLink, Star, Truck, ShieldCheck, Store, BadgeCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 interface ProductResultCardProps {
-  product: any; // Using any to accommodate the expanded Product schema from orchestrator
+  product: any;
   isBestValue?: boolean;
 }
 
@@ -20,6 +18,9 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
   const delivery = product.deliveryEstimate || "3-5 days";
   const stock = product.stockStatus || "In Stock";
   const specs = product.specifications ? product.specifications.split(',').map((s: string) => s.trim()) : [];
+  const warranty = product.warranty || "Standard Brand Warranty";
+  const seller = product.sellerName || "Authorized Retailer";
+  const sellerRating = product.sellerRating || 4.2;
 
   return (
     <Card className={`relative overflow-hidden group border-white/5 transition-all hover:border-primary/50 ${isBestValue ? 'ring-2 ring-primary glow-primary' : ''}`}>
@@ -32,11 +33,11 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
       <CardContent className="p-4 flex flex-col md:flex-row gap-6">
         <div className="relative w-full md:w-56 h-56 bg-secondary/30 rounded-lg overflow-hidden flex-shrink-0">
           <Image
-            src={product.imageUrl || `https://picsum.photos/seed/${product.title}/400/400`}
+            src={product.imageUrl}
             alt={product.title}
             fill
             className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-            data-ai-hint={product.imageHint || "product item"}
+            data-ai-hint={product.imageHint || "product"}
           />
         </div>
 
@@ -67,9 +68,21 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
               </p>
             </div>
 
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground/80 mt-2">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                <span>{warranty}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Store className="w-3.5 h-3.5 text-accent" />
+                <span className="font-medium">{seller}</span>
+                <span className="text-[10px] bg-accent/10 text-accent px-1 rounded">{sellerRating}★</span>
+              </div>
+            </div>
+
             {specs.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {specs.slice(0, 5).map((spec: string, i: number) => (
+                {specs.slice(0, 6).map((spec: string, i: number) => (
                   <span key={i} className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-muted-foreground border border-white/5">
                     {spec}
                   </span>
