@@ -1,28 +1,27 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 235 26% 11%;
+    --background: 235 26% 9%;
     --foreground: 210 40% 98%;
-    --card: 235 26% 13%;
+    --card: 235 26% 11%;
     --card-foreground: 210 40% 98%;
-    --popover: 235 26% 11%;
+    --popover: 235 26% 9%;
     --popover-foreground: 210 40% 98%;
     --primary: 246 100% 71%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 235 26% 18%;
+    --secondary: 235 26% 14%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 235 26% 18%;
+    --muted: 235 26% 14%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 206 86% 62%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 235 26% 20%;
-    --input: 235 26% 20%;
+    --border: 235 26% 16%;
+    --input: 235 26% 16%;
     --ring: 246 100% 71%;
     --radius: 0.75rem;
   }
@@ -33,22 +32,18 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(246, 100%, 71%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(206, 86%, 62%, 0.1) 0px, transparent 50%);
-    background-attachment: fixed;
+    @apply bg-[#0f1117] text-foreground font-body antialiased;
   }
 }
 
 .glass {
-  @apply bg-card/60 backdrop-blur-lg border border-white/10;
+  @apply bg-card/60 backdrop-blur-lg border border-white/5;
 }
 
 .glow-primary {
-  box-shadow: 0 0 20px hsla(246, 100%, 71%, 0.3);
+  box-shadow: 0 0 20px hsla(246, 100%, 71%, 0.2);
 }
 
 .glow-accent {
-  box-shadow: 0 0 20px hsla(206, 86%, 62%, 0.3);
+  box-shadow: 0 0 20px hsla(206, 86%, 62%, 0.2);
 }

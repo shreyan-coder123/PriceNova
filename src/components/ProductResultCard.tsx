@@ -1,9 +1,8 @@
 "use client";
 
-import { ExternalLink, Star, Truck, ShieldCheck, Store, BadgeCheck } from "lucide-react";
+import { Star, Truck, ShieldCheck, TrendingDown, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 interface ProductResultCardProps {
@@ -12,112 +11,79 @@ interface ProductResultCardProps {
 }
 
 export function ProductResultCard({ product, isBestValue }: ProductResultCardProps) {
-  const discount = Math.floor(Math.random() * 15) + 5;
-  const rating = product.rating || (4 + Math.random()).toFixed(1);
-  const reviews = product.reviewsCount || Math.floor(Math.random() * 3000) + 100;
-  const delivery = product.deliveryEstimate || "3-5 days";
-  const stock = product.stockStatus || "In Stock";
-  const specs = product.specifications ? product.specifications.split(',').map((s: string) => s.trim()) : [];
-  const warranty = product.warranty || "Standard Brand Warranty";
-  const seller = product.sellerName || "Authorized Retailer";
-  const sellerRating = product.sellerRating || 4.2;
+  const rating = product.rating || 4.2;
+  const reviews = product.reviewsCount || 0;
+  const delivery = product.deliveryDays || 3;
+  const trust = product.trustScore || 75;
 
   return (
-    <Card className={`relative overflow-hidden group border-white/5 transition-all hover:border-primary/50 ${isBestValue ? 'ring-2 ring-primary glow-primary' : ''}`}>
-      {isBestValue && (
-        <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider z-10">
-          AI Top Value
-        </div>
-      )}
-      
-      <CardContent className="p-4 flex flex-col md:flex-row gap-6">
-        <div className="relative w-full md:w-56 h-56 bg-secondary/30 rounded-lg overflow-hidden flex-shrink-0">
+    <Card className={`relative overflow-hidden group border-white/5 bg-[#1a1c24] hover:bg-[#1e212b] transition-all duration-300 ${isBestValue ? 'ring-1 ring-primary/50' : ''}`}>
+      <CardContent className="p-0">
+        <div className="relative aspect-[4/3] w-full bg-[#1a1c24] overflow-hidden">
           <Image
             src={product.imageUrl}
             alt={product.title}
             fill
-            className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-105 transition-transform duration-700"
             data-ai-hint={product.imageHint || "product"}
           />
+          {isBestValue && (
+            <Badge className="absolute top-3 left-3 bg-primary/20 text-primary border-primary/20 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              AI matched
+            </Badge>
+          )}
         </div>
 
-        <div className="flex-1 flex flex-col">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-accent text-accent bg-accent/10 font-bold uppercase tracking-tight">
-                  {product.platform}
-                </Badge>
-                <Badge variant="secondary" className={`text-[10px] font-bold ${stock.toLowerCase().includes('only') || stock.toLowerCase().includes('low') ? 'text-orange-400' : 'text-green-400'}`}>
-                  {stock}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1 text-yellow-500 font-bold text-sm">
-                <Star className="w-4 h-4 fill-current" />
-                {rating}
-                <span className="text-muted-foreground text-[10px] ml-1">({reviews.toLocaleString()})</span>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-headline font-bold text-xl text-white line-clamp-2 leading-snug">
-                {product.title}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                {product.description}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground/80 mt-2">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                <span>{warranty}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Store className="w-3.5 h-3.5 text-accent" />
-                <span className="font-medium">{seller}</span>
-                <span className="text-[10px] bg-accent/10 text-accent px-1 rounded">{sellerRating}★</span>
-              </div>
-            </div>
-
-            {specs.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {specs.slice(0, 6).map((spec: string, i: number) => (
-                  <span key={i} className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-muted-foreground border border-white/5">
-                    {spec}
-                  </span>
-                ))}
-              </div>
-            )}
+        <div className="p-4 space-y-4">
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-muted-foreground/60 flex items-center gap-1">
+              {product.platform} • Shopping
+            </p>
+            <h3 className="font-headline font-bold text-base text-white leading-tight min-h-[2.5rem] line-clamp-2">
+              {product.title}
+            </h3>
           </div>
 
-          <div className="mt-auto pt-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div className="space-y-1">
-              <div className="text-3xl font-bold text-white font-headline">
-                ₹{product.price.toLocaleString()}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-green-400 uppercase tracking-tight">
+                <TrendingDown className="w-2.5 h-2.5" />
+                Cheapest
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground line-through">
-                  ₹{Math.round(product.price * (1 + discount / 100)).toLocaleString()}
-                </span>
-                <span className="text-green-400 font-bold">
-                  {discount}% OFF
-                </span>
+              <p className="text-sm font-bold text-white">₹{product.price.toLocaleString()}</p>
+              <p className="text-[8px] text-muted-foreground">Other</p>
+            </div>
+            
+            <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-accent uppercase tracking-tight">
+                <Truck className="w-2.5 h-2.5" />
+                Fastest
               </div>
+              <p className="text-sm font-bold text-white">{delivery}d</p>
+              <p className="text-[8px] text-muted-foreground">Other</p>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Truck className="w-4 h-4 text-accent" />
-                <span className="font-medium">Delivery: {delivery}</span>
+            <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1">
+              <div className="flex items-center gap-1 text-[9px] font-bold text-purple-400 uppercase tracking-tight">
+                <ShieldCheck className="w-2.5 h-2.5" />
+                Trust
               </div>
-              <Button asChild className="glow-primary group-hover:glow-accent transition-all h-11 px-6 font-bold">
-                <a href={product.productUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                  View Deal
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </Button>
+              <p className="text-sm font-bold text-white">{trust}</p>
+              <p className="text-[8px] text-muted-foreground">{product.platform}</p>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-yellow-500 fill-current" />
+              <span className="text-sm font-bold text-white">{rating}</span>
+              <span className="text-xs text-muted-foreground">({reviews})</span>
+            </div>
+            <button className="text-[11px] font-bold text-accent hover:text-white transition-colors flex items-center gap-1">
+              Compare 1 sellers
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </CardContent>

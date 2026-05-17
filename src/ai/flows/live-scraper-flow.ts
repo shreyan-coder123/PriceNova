@@ -9,22 +9,18 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ProductSchema = z.object({
-  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Ajio)'),
-  title: z.string().describe('The full title of the product including brand and model'),
-  description: z.string().describe('A detailed realistic product description (3-4 sentences)'),
+  platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Zepto, Blinkit)'),
+  title: z.string().describe('The full specific title including BRAND and MODEL (e.g. "Funskool Handycrafts Sand Art", "Samsung Galaxy S24 Ultra")'),
+  description: z.string().describe('A detailed realistic product description.'),
   price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
   imageUrl: z.string().describe('The URL using the format https://picsum.photos/seed/{unique_seed}/400/400'),
-  imageHint: z.string().describe('A 1-2 word search keyword for the product image (e.g. "saree cover", "fountain pen")'),
-  category: z.string().describe('One of: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home, decor'),
-  specifications: z.string().optional().describe('Detailed specifications (e.g., Processor, RAM, Color, etc.)'),
+  imageHint: z.string().describe('A 1-2 word search keyword for the product image'),
+  category: z.string().describe('Product category'),
   rating: z.number().optional().describe('Average customer rating (out of 5)'),
   reviewsCount: z.number().optional().describe('Total number of reviews'),
-  stockStatus: z.string().optional().describe('Current availability status (e.g., In Stock, Only 2 left)'),
-  deliveryEstimate: z.string().optional().describe('Estimated delivery time (e.g., Tomorrow, 3-5 days)'),
-  warranty: z.string().optional().describe('Warranty information (e.g., 1 Year Manufacturer Warranty)'),
-  sellerName: z.string().optional().describe('Name of the seller on the platform'),
-  sellerRating: z.number().optional().describe('Rating of the seller (out of 5)'),
+  deliveryDays: z.number().describe('Estimated delivery in days (1-7)'),
+  trustScore: z.number().describe('Reliability score (0-100)'),
 });
 
 const MatchedGroupSchema = z.object({
@@ -33,7 +29,7 @@ const MatchedGroupSchema = z.object({
 });
 
 const OrchestratorOutputSchema = z.object({
-  matchedGroups: z.array(MatchedGroupSchema).describe('Products grouped by identity (e.g. same model/variant).'),
+  matchedGroups: z.array(MatchedGroupSchema).describe('Products grouped by identity.'),
   savingsAdvice: z.object({
     recommendationSummary: z.string(),
     bestOfferPlatform: z.string(),
@@ -50,32 +46,25 @@ const orchestratorPrompt = ai.definePrompt({
   input: { schema: z.object({ query: z.string() }) },
   output: { schema: OrchestratorOutputSchema },
   config: {
-    temperature: 0.4,
+    temperature: 0.7,
   },
   prompt: `You are the PriceNova AI Market Intelligence Orchestrator. Your task is to provide realistic, current market data for: "{{query}}".
 
 INSTRUCTIONS:
-1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
-   - Use ACTUAL brands and specific models.
-   - For 'imageHint', provide exactly 1-2 words that best describe the visual item (e.g. "saree covers", "smartphone").
-   - For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/400/400 to ensure a unique consistent image per result.
-   - Assign each product to one of these CATEGORIES: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home, decor.
+1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Zepto, Blinkit).
+   - AVOID generic titles like "Standard Edition" or just the query name.
+   - USE REAL BRANDS and specific product models (e.g., if query is "sand art", use brands like Funskool, Melissa & Doug, etc).
+   - For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/600/400 to ensure a unique consistent image per result.
 
-2. PRICING RULES (INR):
-   - Home Decor/Storage (like Saree Covers): ₹150 - ₹999 (packs).
-   - Pens/Stationery: ₹10 - ₹500 (standard), ₹1,000+ (luxury).
-   - Phones: ₹10,000 - ₹1,50,000.
-   - Laptops: ₹30,000 - ₹2,50,000.
-   - MATCH THE PRICE TO THE EXACT MODEL AND PACK SIZE.
+2. PRICING RULES: Use realistic market pricing for the Indian market in INR.
 
 3. RICH DETAILS:
-   - Provide a realistic 'description' (3-4 sentences).
-   - Include 'specifications' as a comma-separated list.
-   - Generate 'rating', 'reviewsCount', 'warranty', 'sellerName', and 'sellerRating'.
+   - Provide realistic 'rating', 'reviewsCount' (varied numbers), 'deliveryDays', and 'trustScore'.
+   - Assign to appropriate categories.
 
-4. MATCH & GROUP: Analyze the simulated listings and group identical items (same brand, model, and variant) into matchedGroups.
+4. MATCH & GROUP: Analyze the simulated listings and group identical items into matchedGroups.
 
-5. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.`,
+5. SHOPPING ADVICE: Identify the best overall deal.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -93,67 +82,35 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       return output;
     } catch (error: any) {
       console.error('Orchestrator Error:', error);
-      
-      const q = input.query.toLowerCase();
-      let fallbackPrice = 499;
-      let fallbackTitle = `${input.query} - Standard Edition`;
-      let fallbackHint = input.query;
-      let fallbackCategory = "home";
-
-      if (q.includes('saree')) {
-        fallbackPrice = 299;
-        fallbackTitle = `Premium Saree Cover Set (Pack of 12)`;
-        fallbackHint = "saree cover";
-        fallbackCategory = "home";
-      } else if (q.includes('pen') || q.includes('pencil')) {
-        fallbackPrice = 25;
-        fallbackTitle = `Natraj Classic Pencil Pack`;
-        fallbackHint = "pencil";
-        fallbackCategory = "stationery";
-      } else if (q.includes('phone') || q.includes('mobile')) {
-        fallbackPrice = 12999;
-        fallbackTitle = `${input.query} (Entry Level)`;
-        fallbackHint = "smartphone";
-        fallbackCategory = "mobile";
-      }
-
-      const platforms = ['Amazon', 'Flipkart', 'Croma', 'Ajio'];
-      const results: OrchestratorOutput = {
+      // Fallback for demo stability
+      const platforms = ['Amazon', 'Flipkart', 'Zepto'];
+      return {
         matchedGroups: [
           {
-            groupId: 'group-1',
-            products: platforms.map((p, i) => {
-              const uniqueId = `${input.query.replace(/\s+/g, '-')}-${p.toLowerCase()}-${i}`;
-              return {
-                platform: p,
-                title: fallbackTitle,
-                description: `Reliable ${input.query} with high durability and premium build. Ideal for daily usage and organization in modern Indian homes.`,
-                price: Math.round(fallbackPrice * (1 + (i - 1) * 0.05)),
-                productUrl: `https://${p.toLowerCase()}.com`,
-                imageUrl: `https://picsum.photos/seed/${uniqueId}/400/400`,
-                imageHint: fallbackHint,
-                category: fallbackCategory,
-                specifications: 'Durable material, High capacity, Transparent window',
-                rating: 4.2 + (i * 0.1),
-                reviewsCount: 1200 + (i * 500),
-                stockStatus: 'In Stock',
-                deliveryEstimate: '2-3 Days',
-                warranty: '1 Year Manufacturer Warranty',
-                sellerName: `${p} Retail Pvt Ltd`,
-                sellerRating: 4.5
-              };
-            })
+            groupId: 'fallback',
+            products: platforms.map((p, i) => ({
+              platform: p,
+              title: `${input.query} Pro Edition ${i + 1}`,
+              description: `High-quality ${input.query} available on ${p}.`,
+              price: 499 + (i * 100),
+              productUrl: '#',
+              imageUrl: `https://picsum.photos/seed/${input.query}-${p}/600/400`,
+              imageHint: input.query,
+              category: 'general',
+              rating: 4.2,
+              reviewsCount: 150,
+              deliveryDays: 3,
+              trustScore: 85
+            }))
           }
         ],
         savingsAdvice: {
-          recommendationSummary: `Found competitive marketplace offers for your search "${input.query}".`,
-          bestOfferPlatform: "Flipkart",
-          bestOfferProductTitle: fallbackTitle,
-          reasoning: "Best current price for this standard model with fast delivery and high seller ratings."
+          recommendationSummary: 'We found competitive results for your search.',
+          bestOfferPlatform: 'Amazon',
+          bestOfferProductTitle: `${input.query} Pro Edition 1`,
+          reasoning: 'Best balance of price and delivery.'
         }
       };
-
-      return results;
     }
   }
 );
