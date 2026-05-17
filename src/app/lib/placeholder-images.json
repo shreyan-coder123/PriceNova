@@ -54,6 +54,12 @@
       "description": "Home and kitchen appliances",
       "imageUrl": "https://picsum.photos/seed/home/400/400",
       "imageHint": "home appliances"
+    },
+    {
+      "id": "qr-code",
+      "description": "Payment QR Code for Pro upgrade",
+      "imageUrl": "https://picsum.photos/seed/qrcode/400/400",
+      "imageHint": "qr code"
     }
   ]
 }
