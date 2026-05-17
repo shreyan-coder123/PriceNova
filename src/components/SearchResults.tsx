@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,7 +6,7 @@ import { searchProductNova, OrchestratorOutput } from "@/ai/flows/live-scraper-f
 import { ProductResultCard } from "./ProductResultCard";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Sparkles, TrendingDown, Info, Lock, RefreshCcw } from "lucide-react";
-import { incrementSearchCount, getSearchCount, isUserPro } from "@/lib/search-store";
+import { incrementSearchCount, getSearchCount, isUserPro, setProStatus } from "@/lib/search-store";
 import { Button } from "@/components/ui/button";
 
 interface SearchResultsProps {
@@ -52,6 +53,11 @@ export function SearchResults({ query }: SearchResultsProps) {
     performSearch();
   }, [query]);
 
+  const handleUpgrade = () => {
+    setProStatus(true);
+    window.location.reload();
+  };
+
   if (limitReached) {
     return (
       <div className="glass p-12 rounded-2xl text-center max-w-2xl mx-auto border-primary/20 shadow-2xl">
@@ -63,7 +69,7 @@ export function SearchResults({ query }: SearchResultsProps) {
           Free accounts are limited to 20 searches per month. Upgrade to Pro for unlimited real-time tracking.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" className="glow-primary">Upgrade to Pro</Button>
+          <Button size="lg" className="glow-primary" onClick={handleUpgrade}>Upgrade to Pro</Button>
           <Button size="lg" variant="outline" onClick={() => window.location.reload()}>Retry</Button>
         </div>
       </div>

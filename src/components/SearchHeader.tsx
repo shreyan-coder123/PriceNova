@@ -1,24 +1,33 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Zap, User, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { isUserPro } from "@/lib/search-store";
+import { isUserPro, setProStatus } from "@/lib/search-store";
 
 export function SearchHeader() {
   const [query, setQuery] = useState("");
+  const [pro, setPro] = useState(false);
   const router = useRouter();
-  const pro = isUserPro();
+
+  useEffect(() => {
+    setPro(isUserPro());
+  }, []);
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
     }
+  };
+
+  const handleUpgrade = () => {
+    setProStatus(true);
+    window.location.reload();
   };
 
   return (
@@ -51,7 +60,12 @@ export function SearchHeader() {
               Pro
             </div>
           ) : (
-            <Button variant="outline" size="sm" className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10">
+            <Button 
+              onClick={handleUpgrade}
+              variant="outline" 
+              size="sm" 
+              className="hidden sm:flex border-primary/50 text-primary hover:bg-primary/10"
+            >
               Upgrade
             </Button>
           )}

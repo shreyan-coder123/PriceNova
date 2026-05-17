@@ -1,22 +1,34 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Zap, BarChart3, Globe, Shield, Star, ShoppingBag, ArrowRight, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { isUserPro, setProStatus } from "@/lib/search-store";
 
 export default function Home() {
   const [query, setQuery] = useState("");
+  const [pro, setPro] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setPro(isUserPro());
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
     }
+  };
+
+  const handleUpgrade = () => {
+    setProStatus(true);
+    window.location.reload();
   };
 
   return (
@@ -41,7 +53,11 @@ export default function Home() {
           <a href="#" className="hover:text-primary transition-colors">Marketplace Intel</a>
           <a href="#" className="hover:text-primary transition-colors">Pro Pricing</a>
         </div>
-        <Button className="glow-primary">Get Pro</Button>
+        {!pro ? (
+          <Button onClick={handleUpgrade} className="glow-primary">Get Pro</Button>
+        ) : (
+          <Badge className="bg-accent/20 text-accent border-accent/20 px-4 py-2">Pro Active</Badge>
+        )}
       </nav>
 
       <main className="container mx-auto px-4 pt-20 pb-40 relative z-10">
