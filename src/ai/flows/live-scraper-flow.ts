@@ -7,7 +7,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { Product } from './ai-product-matcher-flow';
 
 const LiveScraperInputSchema = z.object({
   query: z.string().describe('The search query for the product.'),
@@ -29,6 +28,7 @@ export type LiveScraperOutput = z.infer<typeof LiveScraperOutputSchema>;
 
 const scraperPrompt = ai.definePrompt({
   name: 'liveScraperPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: LiveScraperInputSchema },
   output: { schema: LiveScraperOutputSchema },
   config: {
@@ -40,7 +40,8 @@ Simulate a search across major platforms (Amazon, Flipkart, Myntra, Ajio, Croma,
 
 For each platform:
 1. Provide a realistic title that follows that platform's naming conventions.
-2. Provide a current, realistic price in Indian Rupees (INR). For example, a pen should be ₹20-₹500, an iPhone ₹70,000+, etc.
+2. Provide a current, realistic price. 
+   CRITICAL: The price MUST be a raw number (e.g., 500, 75000). DO NOT include "₹", commas, or any text in the price field.
 3. Include brief, realistic specifications (e.g., storage, color, material).
 4. Create a plausible product URL.
 5. Ensure the data feels "live" and specific to the Indian market.

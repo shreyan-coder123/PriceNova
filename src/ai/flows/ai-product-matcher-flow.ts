@@ -50,6 +50,7 @@ export type ProductMatcherOutput = z.infer<typeof ProductMatcherOutputSchema>;
 
 const productMatcherPrompt = ai.definePrompt({
   name: 'productMatcherPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: ProductMatcherInputSchema },
   output: { schema: ProductMatcherOutputSchema },
   config: {
