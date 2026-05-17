@@ -29,35 +29,36 @@ const AISavingsAdvisorInputSchema = z.object({
 export type AISavingsAdvisorInput = z.infer<typeof AISavingsAdvisorInputSchema>;
 
 const AISavingsAdvisorOutputSchema = z.object({
-  recommendationSummary: z.string().describe('A summary explaining the best overall deal, considering price, delivery, ratings, and discounts.'),
+  recommendationSummary: z.string().describe('A summary explaining the best overall deal.'),
   bestOfferPlatform: z.string().describe('The platform name where the best offer is found.'),
   bestOfferProductTitle: z.string().describe('The title of the product corresponding to the best offer.'),
   reasoning: z.string().describe('A brief explanation of why this offer was selected as the best.'),
 });
 export type AISavingsAdvisorOutput = z.infer<typeof AISavingsAdvisorOutputSchema>;
 
-const prompt = ai.definePrompt({
+const advisorPrompt = ai.definePrompt({
   name: 'aiSavingsAdvisorPrompt',
   input: {schema: AISavingsAdvisorInputSchema},
   output: {schema: AISavingsAdvisorOutputSchema},
-  prompt: `You are an intelligent shopping advisor for PriceNova. Your goal is to analyze a list of product offers from different e-commerce platforms and recommend the best overall deal to the user. The best deal is not just about the lowest price; it also considers factors like delivery speed, seller ratings, and available discounts. If a product is out of stock or has limited stock, factor that into your recommendation, potentially penalizing it unless it's an exceptional deal worth waiting for.
+  config: {
+    temperature: 0.2,
+  },
+  prompt: `You are an intelligent shopping advisor for PriceNova. Your goal is to analyze a list of product offers and recommend the best overall deal. 
 
-Here are the product offers:
+Consider price, delivery speed, and ratings. 
 
+Product Offers:
 {{#each productOffers}}
-Platform: {{{this.platform}}}
-Product Title: {{{this.productTitle}}}
-Price: {{{this.price}}}
-{{#if this.discount}}Discount: {{{this.discount}}}{{/if}}
-{{#if this.rating}}Rating: {{{this.rating}}} ({{{this.numberOfReviews}}} reviews){{/if}}
-Delivery Estimate: {{{this.deliveryEstimate}}}
-{{#if this.sellerName}}Seller: {{{this.sellerName}}}{{/if}}
-Stock Status: {{{this.stockStatus}}}
-Product URL: {{{this.productUrl}}}
+Platform: {{this.platform}}
+Title: {{this.productTitle}}
+Price: {{this.price}}
+Rating: {{this.rating}}
+Delivery: {{this.deliveryEstimate}}
+Stock: {{this.stockStatus}}
 ---
 {{/each}}
 
-Based on these offers, provide a comprehensive recommendation summary, identify the platform and product title of the best offer, and explain your reasoning. Prioritize overall value, combining price, reliability, and speed.`,
+Identify the best offer and provide reasoning.`,
 });
 
 const aiSavingsAdvisorFlow = ai.defineFlow(
@@ -67,8 +68,20 @@ const aiSavingsAdvisorFlow = ai.defineFlow(
     outputSchema: AISavingsAdvisorOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await advisorPrompt(input);
+      if (!output) throw new Error('AI failed to generate advice.');
+      return output;
+    } catch (error) {
+      console.error('Error in aiSavingsAdvisorFlow:', error);
+      const cheapest = [...input.productOffers].sort((a, b) => a.price - b.price)[0];
+      return {
+        recommendationSummary: `We recommend buying from ${cheapest.platform} as it offers the lowest price of ₹${cheapest.price.toLocaleString()}.`,
+        bestOfferPlatform: cheapest.platform,
+        bestOfferProductTitle: cheapest.productTitle,
+        reasoning: "Cheapest price found among all available platforms.",
+      };
+    }
   }
 );
 
