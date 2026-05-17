@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -37,8 +37,8 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
       setProStatus(true);
       if (onSuccess) onSuccess();
       toast({
-        title: "Payment Received!",
-        description: "Your Pro membership has been activated automatically. Enjoy unlimited searches!",
+        title: "Payment Verified!",
+        description: "Welcome to PriceNova Pro. Your account has been activated automatically.",
       });
       window.location.reload();
     }, 4000);
@@ -52,14 +52,14 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
             <Crown className="text-white w-7 h-7" />
           </div>
           <DialogTitle className="text-3xl font-headline font-bold">
-            {step === "plans" ? "Upgrade to Pro" : step === "payment" ? "Scan to Pay" : "Detecting Payment"}
+            {step === "plans" ? "Upgrade to Pro" : step === "payment" ? "Scan to Pay" : "Activating Account"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground pt-2">
             {step === "plans" 
               ? "Unlock unlimited real-time market scans and deep comparisons."
               : step === "payment"
-              ? "Scan the QR code below using any UPI app to pay ₹500."
-              : "Connecting to bank servers to confirm your transaction..."
+              ? "Scan the QR code below using GPay, PhonePe, or any UPI app."
+              : "Verifying your transaction with bank servers..."
             }
           </DialogDescription>
         </DialogHeader>
@@ -71,45 +71,45 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 <FeatureItem text="Unlimited Real-time Searches" />
                 <FeatureItem text="7+ Platform Comparisons" />
                 <FeatureItem text="Priority Market Intelligence" />
-                <FeatureItem text="Ad-Free Comparison Dashboard" />
+                <FeatureItem text="Ad-Free Experience" />
               </div>
 
               <div className="bg-[#252833] rounded-2xl p-6 border border-white/10 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-primary uppercase tracking-widest">Lifetime Access</p>
+                  <p className="text-xs font-bold text-primary uppercase tracking-widest">One-Time Fee</p>
                   <h4 className="text-4xl font-headline font-bold mt-1">₹500</h4>
                 </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Instant Activation</Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Instant</Badge>
               </div>
 
               <Button onClick={() => setStep("payment")} className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                Get Lifetime Pro
+                Upgrade Now
               </Button>
             </>
           ) : step === "payment" ? (
             <>
               <div className="space-y-6">
-                <div className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center border border-white/5 shadow-inner">
+                <div className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center border border-white/5 shadow-2xl">
                   <div className="relative w-full aspect-square max-w-[240px]">
                     <Image 
-                      src={qrImage?.imageUrl || "https://placehold.co/400x400/white/black?text=SCAN+TO+PAY+₹500"} 
+                      src={qrImage?.imageUrl || "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=upi://pay?pa=9849575920@ybl&pn=PriceNova&am=500&cu=INR"} 
                       alt="Payment QR Code" 
                       fill 
                       className="object-contain"
-                      data-ai-hint="qr code payment"
+                      data-ai-hint="qr code"
                       unoptimized
                     />
                   </div>
                   <div className="mt-4 flex items-center gap-2 text-black">
                      <QrCode className="w-4 h-4" />
-                     <span className="text-[10px] font-bold uppercase tracking-widest">Scan with GPay, PhonePe, or Paytm</span>
+                     <span className="text-[10px] font-bold uppercase tracking-widest">Scan with any UPI App</span>
                   </div>
                 </div>
 
                 <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-start gap-3">
                   <Smartphone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Once you've scanned and completed the payment in your app, click the button below. Our system will automatically verify and upgrade your account.
+                    Once you've scanned and completed the payment, click the button below. Our system will automatically detect the payment and upgrade your account.
                   </p>
                 </div>
               </div>
@@ -134,9 +134,9 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-accent" />
               </div>
               <div className="space-y-2">
-                <p className="font-bold text-lg">Waiting for Confirmation</p>
+                <p className="font-bold text-lg">Confirming Payment</p>
                 <p className="text-sm text-muted-foreground px-4 animate-pulse">
-                  Detecting UPI payment flow...
+                  Detecting UPI transaction...
                 </p>
               </div>
             </div>

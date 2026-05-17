@@ -58,7 +58,7 @@
     {
       "id": "qr-code",
       "description": "Payment QR Code for Pro upgrade",
-      "imageUrl": "https://placehold.co/400x400/white/black?text=SCAN+TO+PAY+₹500",
+      "imageUrl": "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=upi://pay?pa=9849575920@ybl&pn=PriceNova&am=500&cu=INR",
       "imageHint": "qr code"
     }
   ]
