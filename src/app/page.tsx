@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Zap, BarChart3, Globe, Shield, Star, ShoppingBag, ArrowRight } from "lucide-react";
+import { Search, Zap, BarChart3, Globe, Shield, Star, ShoppingBag, ArrowRight, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,8 +37,8 @@ export default function Home() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <a href="#" className="hover:text-primary transition-colors">How it works</a>
-          <a href="#" className="hover:text-primary transition-colors">Supported Platforms</a>
+          <a href="#" className="hover:text-primary transition-colors">AI Engine</a>
+          <a href="#" className="hover:text-primary transition-colors">Marketplace Intel</a>
           <a href="#" className="hover:text-primary transition-colors">Pro Pricing</a>
         </div>
         <Button className="glow-primary">Get Pro</Button>
@@ -48,7 +47,8 @@ export default function Home() {
       <main className="container mx-auto px-4 pt-20 pb-40 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <Badge variant="secondary" className="px-4 py-1.5 rounded-full border border-white/5 bg-white/5 backdrop-blur-md animate-bounce">
-            ✨ Real-time AI Scraping Engine is Active
+            <BrainCircuit className="w-3 h-3 mr-2 inline" />
+            Next-Gen AI Market Intelligence Engine
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-headline font-bold text-white leading-tight">
@@ -56,8 +56,8 @@ export default function Home() {
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Instantly compare LIVE prices, stock, and delivery across 7+ platforms. 
-            Powered by GenAI for perfect product matching.
+            Instantly compare realistic market prices and product variants. 
+            Powered by GenAI for accurate product matching and valuation.
           </p>
 
           <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto group">
@@ -89,26 +89,26 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-40">
           <FeatureCard 
-            icon={<Globe className="w-6 h-6" />}
-            title="Federated Live Search"
-            description="Real-time browser automation fetches data directly from platforms without official APIs."
+            icon={<BrainCircuit className="w-6 h-6" />}
+            title="AI Market Intel"
+            description="Our GenAI models simulate deep marketplace data to provide realistic price comparisons instantly."
           />
           <FeatureCard 
             icon={<BarChart3 className="w-6 h-6" />}
-            title="AI Identity Matching"
+            title="Intelligent Matching"
             description="LLM reasoning detects identical items across varied titles, variants and platform descriptions."
           />
           <FeatureCard 
             icon={<Shield className="w-6 h-6" />}
-            title="Dynamic Verification"
-            description="We bypass anti-bot shields to give you the most accurate, live stock and pricing data."
+            title="Category Aware"
+            description="Our engine understands product categories to ensure accurate valuation from pens to luxury watches."
           />
         </div>
 
         <section className="mt-40 space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl font-headline font-bold">Supported Marketplaces</h2>
-            <p className="text-muted-foreground">We search these platforms in real-time for every request</p>
+            <h2 className="text-3xl font-headline font-bold">Monitored Platforms</h2>
+            <p className="text-muted-foreground">Our AI simulates intelligence from these top marketplaces</p>
           </div>
           <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
             {["Amazon", "Flipkart", "Myntra", "Ajio", "Nykaa", "Croma", "Meesho"].map((p) => (
@@ -125,10 +125,10 @@ export default function Home() {
             <span className="font-headline font-bold">PriceNova</span>
           </div>
           <div className="text-sm text-muted-foreground">
-            © 2024 PriceNova Intelligence Systems. All data is fetched live.
+            © 2024 PriceNova Intelligence Systems. AI Market Simulation Prototype.
           </div>
           <div className="flex gap-6">
-            <a href="#" className="text-sm hover:text-white transition-colors">API Docs</a>
+            <a href="#" className="text-sm hover:text-white transition-colors">AI Roadmap</a>
             <a href="#" className="text-sm hover:text-white transition-colors">Affiliates</a>
             <a href="#" className="text-sm hover:text-white transition-colors">Terms</a>
           </div>

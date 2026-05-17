@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview This flow is the main PriceNova Orchestrator.
+ * @fileOverview This flow is the main PriceNova AI Orchestrator.
  * It uses Gemini to provide realistic market data, group identical products,
  * and generate shopping advice in a single efficient server-side call.
  */
@@ -43,27 +43,27 @@ const orchestratorPrompt = ai.definePrompt({
   config: {
     temperature: 0.4,
   },
-  prompt: `You are the PriceNova AI Search Orchestrator. Your task is to provide realistic, current market data for the product: "{{query}}".
+  prompt: `You are the PriceNova AI Market Intelligence Orchestrator. Your task is to provide realistic, current market data for: "{{query}}".
 
 INSTRUCTIONS:
-1. SIMULATE SEARCH: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
-   - Ensure you cover MULTIPLE BRANDS and MULTIPLE MODELS/VARIANTS related to the query.
-   - For example, if searching "pen", include brands like Reynolds, Parker, Pilot, Linc, Cello.
-   - For "laptop", include various models from Dell, HP, Apple, ASUS, Lenovo.
+1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
+   - Use ACTUAL brands (e.g. for phones: Apple, Samsung; for pens: Reynolds, Parker, Pilot; for shoes: Nike, Adidas).
+   - Include specific model names and variants.
 
-2. REALISTIC PRICING (INR):
-   - Stationery/Pens: ₹10 - ₹200 (unless it's a luxury brand like Montblanc which can be ₹20,000+).
-   - Electronics/Mobiles: ₹10,000 - ₹1,50,000.
-   - Footwear: ₹500 - ₹15,000.
-   - Grocery: ₹20 - ₹500.
-   - Luxury Watches: ₹5,000 - ₹5,00,000.
+2. RIGOROUS REALISTIC PRICING (INR):
+   - Everyday Stationery (Pens/Pencils): ₹10 - ₹200 for single units or packs.
+   - Standard Electronics: ₹5,000 - ₹50,000.
+   - Flagship Mobiles/Laptops: ₹60,000 - ₹1,80,000.
+   - Fashion/Sneakers: ₹500 - ₹12,000.
+   - Grocery items: ₹20 - ₹800.
+   - Luxury Items: Up to ₹5,00,000.
+   - MATCH THE PRICE TO THE CATEGORY. A pen should NOT cost thousands of rupees unless it is a luxury Montblanc.
 
 3. MATCH & GROUP: Analyze the simulated listings and group identical items (same brand, model, and variant) into matchedGroups.
-   - Each group should represent a specific unique product available at different prices on different platforms.
 
 4. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.
 
-IMPORTANT: Ensure the 'price' field is a raw number. DO NOT use commas or currency symbols. Generate at least 15 unique product entries in total across all groups.`,
+IMPORTANT: Ensure the 'price' field is a raw number. Generate at least 15 unique product entries across multiple groups.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -82,7 +82,6 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
     } catch (error: any) {
       console.error('Orchestrator Error:', error);
       
-      // Expanded intelligent fallback pricing
       const q = input.query.toLowerCase();
       let fallbackPrice = 499;
       let fallbackTitle = `${input.query} - Standard Edition`;
@@ -90,15 +89,11 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       if (q.includes('pen') || q.includes('pencil') || q.includes('stationery')) {
         fallbackPrice = 45;
         fallbackTitle = `Reynolds Jetter Classic Ball Pen - Pack of 5`;
-      } else if (q.includes('iphone') || q.includes('phone') || q.includes('laptop')) {
-        fallbackPrice = 64999;
+      } else if (q.includes('phone') || q.includes('iphone') || q.includes('mobile') || q.includes('laptop')) {
+        fallbackPrice = 54999;
         fallbackTitle = `${input.query} (128GB Storage)`;
-      } else if (q.includes('shoe') || q.includes('sneaker')) {
-        fallbackPrice = 2499;
-        fallbackTitle = `${input.query} - Running Edition`;
       }
 
-      // Generate 15 fallback items across 3 groups to satisfy the "15 types" requirement in case of AI error
       const platforms = ['Amazon', 'Flipkart', 'Myntra', 'Ajio', 'Croma', 'Nykaa', 'Meesho'];
       const results: OrchestratorOutput = {
         matchedGroups: [
@@ -112,35 +107,13 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
               productUrl: `https://${p.toLowerCase()}.com`,
               specifications: 'Standard quality'
             }))
-          },
-          {
-            groupId: 'group-2',
-            products: platforms.slice(0, 4).map((p, i) => ({
-              platform: p,
-              title: `${input.query} Pro Edition`,
-              description: `Advanced variant of ${input.query}.`,
-              price: Math.round(fallbackPrice * 1.5 * (1 + i * 0.01)),
-              productUrl: `https://${p.toLowerCase()}.com`,
-              specifications: 'Premium quality'
-            }))
-          },
-          {
-            groupId: 'group-3',
-            products: platforms.slice(0, 4).map((p, i) => ({
-              platform: p,
-              title: `${input.query} Lite`,
-              description: `Budget-friendly ${input.query}.`,
-              price: Math.round(fallbackPrice * 0.7 * (1 + i * 0.01)),
-              productUrl: `https://${p.toLowerCase()}.com`,
-              specifications: 'Basic quality'
-            }))
           }
         ],
         savingsAdvice: {
-          recommendationSummary: "Several marketplace offers found.",
+          recommendationSummary: "Marketplace offers found.",
           bestOfferPlatform: "Flipkart",
           bestOfferProductTitle: fallbackTitle,
-          reasoning: "Best balance of price and platform trust found in our simulated data."
+          reasoning: "Best current price for this standard model."
         }
       };
 
