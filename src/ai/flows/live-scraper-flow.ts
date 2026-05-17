@@ -75,7 +75,7 @@ YOUR TASK:
 2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
 3. For each group, the "products" array should contain the offers for that specific item across different sources.
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
-5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL.
+5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL name.
    - Example Input: "Trino Women's Running Shoes" -> Example Output Title: "CAMPUS TRINO Women Sneakers"
    - Example Input: "iPhone 16 128GB Blue" -> Example Output Title: "APPLE iPhone 16 128GB"
    You MUST infer the brand if it's not explicitly in the title but obvious from the source/context.
