@@ -55,7 +55,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             <p className="text-[11px] font-medium text-muted-foreground/60 flex items-center gap-1 uppercase tracking-wider">
               {bestOffer.platform} • {bestOffer.category || 'Marketplace'}
             </p>
-            <h3 className="font-headline font-bold text-base text-white leading-tight min-h-[2.5rem] line-clamp-2">
+            <h3 className="font-headline font-bold text-base text-white leading-tight min-h-[3rem] line-clamp-2">
               {bestOffer.title}
             </h3>
           </div>
@@ -67,7 +67,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                 Price
               </div>
               <p className="text-sm font-bold text-white">₹{bestOffer.price.toLocaleString()}</p>
-              <p className="text-[8px] text-muted-foreground">Best Value</p>
+              <p className="text-[8px] text-muted-foreground">Best Offer</p>
             </div>
             
             <div className="bg-[#252833] rounded-md p-2 flex flex-col gap-1 border border-white/5">
@@ -85,7 +85,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                 Trust
               </div>
               <p className="text-sm font-bold text-white">{trust}%</p>
-              <p className="text-[8px] text-muted-foreground">Seller</p>
+              <p className="text-[8px] text-muted-foreground">Reliability</p>
             </div>
           </div>
 
@@ -99,7 +99,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             <Dialog>
               <DialogTrigger asChild>
                 <button className="text-[11px] font-bold text-accent hover:text-white transition-colors flex items-center gap-1 outline-none group/btn">
-                  {platformCount > 1 ? `Selling on ${platformCount} platforms` : `Buy on ${bestOffer.platform}`}
+                  {platformCount > 1 ? `Selling on ${platformCount} platforms` : `Check on ${bestOffer.platform}`}
                   <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
                 </button>
               </DialogTrigger>
@@ -107,7 +107,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                 <DialogHeader>
                   <DialogTitle className="text-xl font-headline font-bold flex items-center gap-2">
                     <ShieldCheck className="text-primary w-5 h-5" />
-                    Live Market Comparison
+                    Live Market Intelligence
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 mt-4">
@@ -142,7 +142,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mb-1">{p.platform}</p>
                               <div className="flex items-baseline gap-1">
                                 <span className="text-lg font-bold">₹{p.price.toLocaleString()}</span>
-                                {idx === 0 && <span className="text-[9px] font-bold text-green-400 uppercase">Best</span>}
+                                {idx === 0 && <Badge variant="outline" className="text-[8px] py-0 h-4 border-green-500/50 text-green-400">BEST DEAL</Badge>}
                               </div>
                             </div>
                             <div className="h-10 w-px bg-white/5" />

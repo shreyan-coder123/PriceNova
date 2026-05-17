@@ -52,15 +52,16 @@ const orchestratorPrompt = ai.definePrompt({
 
 STRICT INSTRUCTIONS FOR TITLES:
 - USE REAL BRANDS and SPECIFIC MODEL NAMES.
-- DO NOT use generic suffixes like "Standard Edition", "Base Variant", or "Pro Edition" unless they are part of the ACTUAL product name.
+- AVOID generic words like "Product", "Item", or "Standard Edition".
 - FORMAT: [Brand] [Model/Sub-brand] [Specific Name/Category]. 
 - EXAMPLE: If query is "shoes", titles should be like "Campus TRINO Women Sneakers" or "Nike Air Max 270". If query is "pen", titles should be "Parker Frontier Matte Black GT Roller Ball Pen".
+- ENSURE titles are unique and represent specific variants.
 
 MARKET SIMULATION:
 1. Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Zepto, Blinkit).
 2. For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/600/400 to ensure a unique consistent image per result.
 3. PRICING: Use realistic market pricing for the Indian market in INR. (e.g., Campus shoes ~₹1200-₹3000, Parker Pens ~₹400-₹1500).
-4. MATCH & GROUP: Analyze the simulated listings and group identical items into matchedGroups. Identical items should have the same brand/model across different platforms.`,
+4. MATCH & GROUP: Analyze the simulated listings and group identical items into matchedGroups. Identical items should have the same brand/model across different platforms. At least 5 unique groups should be generated if possible.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -83,10 +84,10 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       return {
         matchedGroups: [
           {
-            groupId: 'fallback',
+            groupId: 'fallback-campus',
             products: platforms.map((p, i) => ({
               platform: p,
-              title: `Campus TRINO Women Sneakers ${i === 0 ? '' : '(New Arrival)'}`,
+              title: `Campus TRINO Women Sneakers`,
               description: `High-quality Campus sneakers with comfortable sole and breathable fabric.`,
               price: 1899 + (i * 100),
               productUrl: '#',
