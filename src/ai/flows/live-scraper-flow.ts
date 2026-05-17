@@ -12,7 +12,7 @@ const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
-  title: z.string().describe('The full specific title starting with Brand then Model (e.g., "Campus TRINO Women Sneakers")'),
+  title: z.string().describe('The full specific title starting with BRAND then MODEL (e.g., "CAMPUS TRINO Women Sneakers")'),
   description: z.string().describe('A realistic product description.'),
   price: z.coerce.number().describe('The price in INR (number only)'),
   productUrl: z.string().describe('The direct link to the product'),
@@ -75,9 +75,9 @@ YOUR TASK:
 2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
 3. For each group, the "products" array should contain the offers for that specific item across different sources.
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
-5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME followed by the MODEL.
-   - Example Input: "Trino Women's Running Shoes" -> Example Output Title: "Campus TRINO Women Sneakers"
-   - Example Input: "iPhone 16 128GB Blue" -> Example Output Title: "Apple iPhone 16 128GB"
+5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL.
+   - Example Input: "Trino Women's Running Shoes" -> Example Output Title: "CAMPUS TRINO Women Sneakers"
+   - Example Input: "iPhone 16 128GB Blue" -> Example Output Title: "APPLE iPhone 16 128GB"
    You MUST infer the brand if it's not explicitly in the title but obvious from the source/context.
 6. Use the highest quality thumbnail available.
 7. For deliveryDays and trustScore, use realistic estimates (Amazon/Flipkart: 2-4 days, 95% trust; smaller sites: 5-7 days, 75% trust).
