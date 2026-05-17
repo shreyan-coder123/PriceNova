@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Star, Truck, ShieldCheck, TrendingDown, ArrowRight, ExternalLink } from "lucide-react";
+import { Star, Truck, ShieldCheck, TrendingDown, ArrowRight, ExternalLink, Globe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -40,12 +41,12 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             alt={bestOffer.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
-            data-ai-hint={bestOffer.imageHint || "product"}
+            unoptimized={bestOffer.imageUrl.includes('gstatic.com')}
           />
-          {isBestValue && (
-            <Badge className="absolute top-3 left-3 bg-primary/20 text-primary border-primary/20 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              AI Verified Match
+          {platformCount > 1 && (
+            <Badge className="absolute top-3 left-3 bg-accent text-white border-accent/20 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+              <Globe className="w-2.5 h-2.5" />
+              {platformCount} PLATFORMS COMPARED
             </Badge>
           )}
         </div>
@@ -99,7 +100,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             <Dialog>
               <DialogTrigger asChild>
                 <button className="text-[11px] font-bold text-accent hover:text-white transition-colors flex items-center gap-1 outline-none group/btn">
-                  {platformCount > 1 ? `Selling on ${platformCount} platforms` : `Check on ${bestOffer.platform}`}
+                  {platformCount > 1 ? `Compare all ${platformCount} stores` : `Check on ${bestOffer.platform}`}
                   <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
                 </button>
               </DialogTrigger>
@@ -107,7 +108,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                 <DialogHeader>
                   <DialogTitle className="text-xl font-headline font-bold flex items-center gap-2">
                     <ShieldCheck className="text-primary w-5 h-5" />
-                    Live Market Intelligence
+                    Market Intelligence: {platformCount} Stores Found
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 mt-4">
@@ -117,7 +118,8 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                         src={bestOffer.imageUrl} 
                         alt={bestOffer.title} 
                         fill 
-                        className="object-cover" 
+                        className="object-cover"
+                        unoptimized={bestOffer.imageUrl.includes('gstatic.com')}
                       />
                     </div>
                     <div className="space-y-2">
@@ -132,7 +134,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Available Marketplace Offers</h5>
-                      <span className="text-[10px] text-muted-foreground italic">Prices include taxes</span>
+                      <span className="text-[10px] text-muted-foreground italic">Real-time Comparison</span>
                     </div>
                     <div className="grid gap-3">
                       {products.map((p, idx) => (
@@ -142,7 +144,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mb-1">{p.platform}</p>
                               <div className="flex items-baseline gap-1">
                                 <span className="text-lg font-bold">₹{p.price.toLocaleString()}</span>
-                                {idx === 0 && <Badge variant="outline" className="text-[8px] py-0 h-4 border-green-500/50 text-green-400">BEST DEAL</Badge>}
+                                {idx === 0 && <Badge variant="outline" className="text-[8px] py-0 h-4 border-green-500/50 text-green-400">BEST PRICE</Badge>}
                               </div>
                             </div>
                             <div className="h-10 w-px bg-white/5" />
@@ -152,9 +154,6 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                               </span>
                               <span className="flex items-center gap-1.5 text-[11px] text-purple-400 font-medium">
                                 <ShieldCheck className="w-3.5 h-3.5" /> {p.trustScore}% Trust
-                              </span>
-                              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                <Star className="w-3.5 h-3.5 text-yellow-500/50" /> {p.rating} Rating
                               </span>
                             </div>
                           </div>

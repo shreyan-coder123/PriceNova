@@ -34,6 +34,8 @@ const OrchestratorOutputSchema = z.object({
 
 export type OrchestratorOutput = z.infer<typeof OrchestratorOutputSchema>;
 
+const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital"];
+
 /**
  * Fetches real shopping results from SerpApi
  */
@@ -54,16 +56,17 @@ async function fetchLiveShoppingData(query: string) {
 }
 
 /**
- * Normalizes title for grouping
+ * Normalizes title for grouping using a more aggressive match key
  */
-function normalizeTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .split(' ')
-    .filter(word => word.length > 2)
-    .slice(0, 5) // Slightly longer slice for better specificity
-    .join(' ');
+function getGroupingKey(title: string): string {
+  // Clean the title and take the first few core identifying words
+  const clean = title.toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(word => word.length > 2);
+  
+  // Use first 4 words as a broad matching key for identical models
+  return clean.slice(0, 4).join(' ');
 }
 
 /**
@@ -78,7 +81,6 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
     }
 
     const groupsMap = new Map<string, any[]>();
-    const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital"];
 
     rawResults.forEach((item: any) => {
       const priceStr = String(item.price || "0").replace(/[^0-9.]/g, "");
@@ -105,7 +107,7 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
         trustScore: TARGET_PLATFORMS.includes(matchedPlatform) ? 98 : 82,
       };
 
-      const groupKey = normalizeTitle(item.title);
+      const groupKey = getGroupingKey(item.title);
       if (!groupsMap.has(groupKey)) {
         groupsMap.set(groupKey, []);
       }
@@ -113,10 +115,10 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
     });
 
     const matchedGroups = Array.from(groupsMap.entries()).map(([key, products], index) => {
-      // Sort products by price within the group
+      // Sort products within the group by price
       const sortedProducts = products.sort((a, b) => a.price - b.price);
       
-      // To truly "compare", we ensure that the group has a unique platform entry where possible
+      // Filter for unique platforms in comparison
       const uniquePlatformProducts = [];
       const seenPlatforms = new Set();
       
@@ -133,12 +135,15 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       };
     });
 
-    // Sort groups so the best value (cheapest entry in cheapest group) comes first
-    // Also prioritize groups that have more platform comparisons
+    // Prioritize groups that have results from our TARGET_PLATFORMS
     matchedGroups.sort((a, b) => {
-      if (b.products.length !== a.products.length) {
-        return b.products.length - a.products.length;
+      const aTargetCount = a.products.filter(p => TARGET_PLATFORMS.includes(p.platform)).length;
+      const bTargetCount = b.products.filter(p => TARGET_PLATFORMS.includes(p.platform)).length;
+      
+      if (bTargetCount !== aTargetCount) {
+        return bTargetCount - aTargetCount;
       }
+      
       return a.products[0].price - b.products[0].price;
     });
 

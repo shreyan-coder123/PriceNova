@@ -31,25 +31,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'encrypted-tbn0.gstatic.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'encrypted-tbn1.gstatic.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'encrypted-tbn2.gstatic.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'encrypted-tbn3.gstatic.com',
+        hostname: '*.gstatic.com',
         port: '',
         pathname: '/**',
       },
@@ -110,12 +92,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'media.croma.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.gstatic.com',
         port: '',
         pathname: '/**',
       },
