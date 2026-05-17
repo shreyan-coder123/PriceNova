@@ -78,7 +78,7 @@ YOUR TASK:
 5. MANDATORY BRAND-FIRST TITLES: Every product title in the output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL name.
    - Example Input: "Trino Women's Running Shoes" -> Example Output Title: "CAMPUS TRINO Women Sneakers"
    - Example Input: "iPhone 16 128GB Blue" -> Example Output Title: "APPLE iPhone 16 128GB"
-   You MUST infer the brand if it's not explicitly in the title but obvious from the source/context.
+   You MUST infer the brand if it's not explicitly in the title but obvious from the source/context. DO NOT use generic names.
 6. Use the highest quality thumbnail available.
 7. For deliveryDays and trustScore, use realistic estimates (Amazon/Flipkart: 2-4 days, 95% trust; smaller sites: 5-7 days, 75% trust).
 
