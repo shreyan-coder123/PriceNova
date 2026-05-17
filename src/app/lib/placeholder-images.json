@@ -58,7 +58,7 @@
     {
       "id": "qr-code",
       "description": "Payment QR Code for Pro upgrade",
-      "imageUrl": "https://picsum.photos/seed/qrcode/400/400",
+      "imageUrl": "https://placehold.co/400x400/white/black?text=SCAN+TO+PAY+₹500",
       "imageHint": "qr code"
     }
   ]

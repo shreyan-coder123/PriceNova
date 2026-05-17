@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -11,8 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Crown, Loader2, ShieldCheck, CheckCircle2, QrCode } from "lucide-react";
+import { Crown, Loader2, ShieldCheck, CheckCircle2, QrCode, Smartphone } from "lucide-react";
 import { setProStatus } from "@/lib/search-store";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -26,32 +25,23 @@ interface PricingModalProps {
 
 export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) {
   const [step, setStep] = useState<"plans" | "payment" | "verifying">("plans");
-  const [txnId, setTxnId] = useState("");
   const { toast } = useToast();
 
   const qrImage = PlaceHolderImages.find(img => img.id === 'qr-code');
 
-  const handleUpgrade = () => {
-    if (txnId.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Please enter a valid Transaction ID.",
-      });
-      return;
-    }
-
+  const handlePaymentSimulation = () => {
     setStep("verifying");
     
+    // Simulating automatic payment detection
     setTimeout(() => {
       setProStatus(true);
       if (onSuccess) onSuccess();
       toast({
-        title: "Account Activated!",
-        description: "Payment verified. Your Pro membership is now active!",
+        title: "Payment Received!",
+        description: "Your Pro membership has been activated automatically. Enjoy unlimited searches!",
       });
       window.location.reload();
-    }, 3500);
+    }, 4000);
   };
 
   return (
@@ -62,14 +52,14 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
             <Crown className="text-white w-7 h-7" />
           </div>
           <DialogTitle className="text-3xl font-headline font-bold">
-            {step === "plans" ? "Upgrade to Pro" : step === "payment" ? "Scan to Pay" : "Verifying Payment"}
+            {step === "plans" ? "Upgrade to Pro" : step === "payment" ? "Scan to Pay" : "Detecting Payment"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground pt-2">
             {step === "plans" 
               ? "Unlock unlimited real-time market scans and deep comparisons."
               : step === "payment"
-              ? "Scan the QR code below and pay ₹500 to activate your account."
-              : "Our automated system is verifying your transaction ID..."
+              ? "Scan the QR code below using any UPI app to pay ₹500."
+              : "Connecting to bank servers to confirm your transaction..."
             }
           </DialogDescription>
         </DialogHeader>
@@ -102,40 +92,33 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 <div className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center border border-white/5 shadow-inner">
                   <div className="relative w-full aspect-square max-w-[240px]">
                     <Image 
-                      src={qrImage?.imageUrl || ""} 
+                      src={qrImage?.imageUrl || "https://placehold.co/400x400/white/black?text=SCAN+TO+PAY+₹500"} 
                       alt="Payment QR Code" 
                       fill 
                       className="object-contain"
-                      data-ai-hint={qrImage?.imageHint}
+                      data-ai-hint="qr code payment"
                       unoptimized
                     />
                   </div>
                   <div className="mt-4 flex items-center gap-2 text-black">
                      <QrCode className="w-4 h-4" />
-                     <span className="text-[10px] font-bold uppercase tracking-widest">Scan with any UPI App</span>
+                     <span className="text-[10px] font-bold uppercase tracking-widest">Scan with GPay, PhonePe, or Paytm</span>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                      Transaction ID / Reference Number
-                    </label>
-                    <Input 
-                      value={txnId}
-                      onChange={(e) => setTxnId(e.target.value)}
-                      placeholder="Enter the 12-digit Ref ID"
-                      className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary"
-                    />
-                    <p className="text-[10px] text-muted-foreground pl-1 italic">
-                      Activation happens instantly once you submit the ID.
-                    </p>
-                  </div>
+                <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-start gap-3">
+                  <Smartphone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Once you've scanned and completed the payment in your app, click the button below. Our system will automatically verify and upgrade your account.
+                  </p>
                 </div>
               </div>
 
-              <Button onClick={handleUpgrade} className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                Complete Upgrade
+              <Button 
+                onClick={handlePaymentSimulation} 
+                className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+              >
+                I Have Paid
               </Button>
               <button 
                 onClick={() => setStep("plans")}
@@ -151,9 +134,9 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-accent" />
               </div>
               <div className="space-y-2">
-                <p className="font-bold text-lg">Verifying Payment</p>
-                <p className="text-sm text-muted-foreground px-4">
-                  Confirming Transaction ID: {txnId}
+                <p className="font-bold text-lg">Waiting for Confirmation</p>
+                <p className="text-sm text-muted-foreground px-4 animate-pulse">
+                  Detecting UPI payment flow...
                 </p>
               </div>
             </div>
