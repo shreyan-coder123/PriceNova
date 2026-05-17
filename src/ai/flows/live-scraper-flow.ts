@@ -10,7 +10,7 @@ import { z } from 'genkit';
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Zepto, Blinkit)'),
-  title: z.string().describe('The full specific title including BRAND and MODEL (e.g. "Funskool Handycrafts Sand Art", "Samsung Galaxy S24 Ultra")'),
+  title: z.string().describe('The full specific title including BRAND and MODEL (e.g. "Campus TRINO Women Sneakers", "Samsung Galaxy S24 Ultra")'),
   description: z.string().describe('A detailed realistic product description.'),
   price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
@@ -50,21 +50,17 @@ const orchestratorPrompt = ai.definePrompt({
   },
   prompt: `You are the PriceNova AI Market Intelligence Orchestrator. Your task is to provide realistic, current market data for: "{{query}}".
 
-INSTRUCTIONS:
-1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Zepto, Blinkit).
-   - AVOID generic titles like "Standard Edition" or just the query name.
-   - USE REAL BRANDS and specific product models (e.g., if query is "sand art", use brands like Funskool, Melissa & Doug, etc).
-   - For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/600/400 to ensure a unique consistent image per result.
+STRICT INSTRUCTIONS FOR TITLES:
+- USE REAL BRANDS and SPECIFIC MODEL NAMES.
+- DO NOT use generic suffixes like "Standard Edition", "Base Variant", or "Pro Edition" unless they are part of the ACTUAL product name.
+- FORMAT: [Brand] [Model/Sub-brand] [Specific Name/Category]. 
+- EXAMPLE: If query is "shoes", titles should be like "Campus TRINO Women Sneakers" or "Nike Air Max 270". If query is "pen", titles should be "Parker Frontier Matte Black GT Roller Ball Pen".
 
-2. PRICING RULES: Use realistic market pricing for the Indian market in INR.
-
-3. RICH DETAILS:
-   - Provide realistic 'rating', 'reviewsCount' (varied numbers), 'deliveryDays', and 'trustScore'.
-   - Assign to appropriate categories.
-
-4. MATCH & GROUP: Analyze the simulated listings and group identical items into matchedGroups.
-
-5. SHOPPING ADVICE: Identify the best overall deal.`,
+MARKET SIMULATION:
+1. Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Zepto, Blinkit).
+2. For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/600/400 to ensure a unique consistent image per result.
+3. PRICING: Use realistic market pricing for the Indian market in INR. (e.g., Campus shoes ~₹1200-₹3000, Parker Pens ~₹400-₹1500).
+4. MATCH & GROUP: Analyze the simulated listings and group identical items into matchedGroups. Identical items should have the same brand/model across different platforms.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -83,31 +79,31 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
     } catch (error: any) {
       console.error('Orchestrator Error:', error);
       // Fallback for demo stability
-      const platforms = ['Amazon', 'Flipkart', 'Zepto'];
+      const platforms = ['Amazon', 'Flipkart', 'Myntra'];
       return {
         matchedGroups: [
           {
             groupId: 'fallback',
             products: platforms.map((p, i) => ({
               platform: p,
-              title: `${input.query} Pro Edition ${i + 1}`,
-              description: `High-quality ${input.query} available on ${p}.`,
-              price: 499 + (i * 100),
+              title: `Campus TRINO Women Sneakers ${i === 0 ? '' : '(New Arrival)'}`,
+              description: `High-quality Campus sneakers with comfortable sole and breathable fabric.`,
+              price: 1899 + (i * 100),
               productUrl: '#',
               imageUrl: `https://picsum.photos/seed/${input.query}-${p}/600/400`,
-              imageHint: input.query,
-              category: 'general',
-              rating: 4.2,
-              reviewsCount: 150,
-              deliveryDays: 3,
-              trustScore: 85
+              imageHint: "sneakers",
+              category: 'footwear',
+              rating: 4.5,
+              reviewsCount: 1250,
+              deliveryDays: 2,
+              trustScore: 92
             }))
           }
         ],
         savingsAdvice: {
           recommendationSummary: 'We found competitive results for your search.',
           bestOfferPlatform: 'Amazon',
-          bestOfferProductTitle: `${input.query} Pro Edition 1`,
+          bestOfferProductTitle: `Campus TRINO Women Sneakers`,
           reasoning: 'Best balance of price and delivery.'
         }
       };
