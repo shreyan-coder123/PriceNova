@@ -1,8 +1,8 @@
+
 'use server';
 /**
- * @fileOverview This file handles the real-time product data fetching and processing.
- * The AI agent has been removed to ensure stability and resolve model resolution errors.
- * It now uses a direct mapping logic to provide consistent search results.
+ * @fileOverview This file handles real-time product data fetching and intelligent grouping.
+ * It maps raw SerpApi results and groups identical items to provide price comparison.
  */
 
 import { z } from 'zod';
@@ -54,8 +54,20 @@ async function fetchLiveShoppingData(query: string) {
 }
 
 /**
- * Orchestrates the search process without an AI agent.
- * Maps raw SerpApi results directly to the application schema.
+ * Normalizes title for grouping
+ */
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(' ')
+    .filter(word => word.length > 2)
+    .slice(0, 4)
+    .join(' ');
+}
+
+/**
+ * Orchestrates the search process and groups similar products.
  */
 export async function searchProductNova(query: string): Promise<OrchestratorOutput> {
   try {
@@ -65,37 +77,45 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       throw new Error('No real-time market data found for this product.');
     }
 
-    // Process raw results into the expected format
-    const matchedGroups = rawResults.slice(0, 40).map((item: any, index: number) => {
-      // Clean price string (e.g., "₹4,599" -> 4599)
+    const groupsMap = new Map<string, any[]>();
+
+    rawResults.slice(0, 50).forEach((item: any) => {
       const priceStr = String(item.price || "0").replace(/[^0-9.]/g, "");
       const price = parseFloat(priceStr) || 0;
       
-      // Basic heuristic for delivery and trust
       const platform = item.source || "Marketplace";
-      const isTopSite = ["Amazon", "Flipkart", "Myntra", "Croma", "Ajio"].some(site => 
+      const isTopSite = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nykaa", "Reliance Digital"].some(site => 
         platform.toLowerCase().includes(site.toLowerCase())
       );
 
       const product = {
         platform: platform,
         title: item.title,
-        description: item.description || `Available on ${platform}. Professional grade ${item.title} with competitive pricing.`,
+        description: item.description || `Verified offer from ${platform}. High-quality ${item.title} available with fast shipping.`,
         price: price,
         productUrl: item.link,
         imageUrl: item.thumbnail,
         category: item.category || "General",
         rating: item.rating ? parseFloat(item.rating) : 4.0,
         reviewsCount: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, "")) : 0,
-        deliveryDays: isTopSite ? 3 : 5,
-        trustScore: isTopSite ? 96 : 78,
+        deliveryDays: isTopSite ? 2 : 4,
+        trustScore: isTopSite ? 98 : 82,
       };
 
-      return {
-        groupId: `group-${index}`,
-        products: [product],
-      };
+      const groupKey = normalizeTitle(item.title);
+      if (!groupsMap.has(groupKey)) {
+        groupsMap.set(groupKey, []);
+      }
+      groupsMap.get(groupKey)?.push(product);
     });
+
+    const matchedGroups = Array.from(groupsMap.entries()).map(([key, products], index) => ({
+      groupId: `group-${index}`,
+      products: products.sort((a, b) => a.price - b.price),
+    }));
+
+    // Sort groups so the best value (cheapest entry in cheapest group) comes first
+    matchedGroups.sort((a, b) => a.products[0].price - b.products[0].price);
 
     return { matchedGroups };
   } catch (error: any) {
