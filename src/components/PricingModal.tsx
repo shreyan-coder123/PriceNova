@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Zap, Crown, Smartphone, CreditCard, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { Zap, Crown, Smartphone, CreditCard, CheckCircle2, Loader2, ShieldCheck, Upload, FileText, Image as ImageIcon, X } from "lucide-react";
 import { setProStatus } from "@/lib/search-store";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -24,30 +25,68 @@ interface PricingModalProps {
 export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) {
   const [step, setStep] = useState<"plans" | "payment" | "verifying">("plans");
   const [txnId, setTxnId] = useState("");
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+        });
+        return;
+      }
+
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshot(reader.result as string);
+        setIsUploading(false);
+        toast({
+          title: "Screenshot uploaded",
+          description: "Proof of payment has been attached.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleUpgrade = () => {
     if (txnId.length < 6) {
       toast({
         variant: "destructive",
-        title: "Invalid Transaction ID",
-        description: "Please enter a valid 6-12 digit UPI transaction ID.",
+        title: "Missing Information",
+        description: "Please enter a valid UPI transaction ID.",
+      });
+      return;
+    }
+
+    if (!screenshot) {
+      toast({
+        variant: "destructive",
+        title: "Screenshot Required",
+        description: "Please upload a screenshot of your payment for verification.",
       });
       return;
     }
 
     setStep("verifying");
     
-    // Simulate payment verification delay
+    // Simulate deep payment and screenshot verification
     setTimeout(() => {
       setProStatus(true);
       if (onSuccess) onSuccess();
       toast({
         title: "Account Activated!",
-        description: "Your Pro membership is now active. Enjoy unlimited searches!",
+        description: "Payment verified. Your Pro membership is now active!",
       });
       window.location.reload();
-    }, 2500);
+    }, 3500);
   };
 
   return (
@@ -64,8 +103,8 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
             {step === "plans" 
               ? "Unlock unlimited real-time market scans and deep comparisons."
               : step === "payment"
-              ? "Pay using any UPI app to activate your Pro account."
-              : "Our automated system is verifying your transaction..."
+              ? "Pay ₹500 to the UPI number below and upload the screenshot."
+              : "Our automated system is verifying your payment and screenshot..."
             }
           </DialogDescription>
         </DialogHeader>
@@ -76,8 +115,8 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
               <div className="space-y-4">
                 <FeatureItem text="Unlimited Real-time Searches" />
                 <FeatureItem text="7+ Platform Comparisons" />
-                <FeatureItem text="Advanced Price Analytics" />
                 <FeatureItem text="Priority Market Intelligence" />
+                <FeatureItem text="Ad-Free Comparison Dashboard" />
               </div>
 
               <div className="bg-[#252833] rounded-2xl p-6 border border-white/10 flex items-center justify-between">
@@ -85,11 +124,11 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                   <p className="text-xs font-bold text-primary uppercase tracking-widest">Lifetime Access</p>
                   <h4 className="text-4xl font-headline font-bold mt-1">₹500</h4>
                 </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Best Value</Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Instant Activation</Badge>
               </div>
 
               <Button onClick={() => setStep("payment")} className="w-full h-14 rounded-xl text-lg font-bold glow-primary">
-                Choose Pro Plan
+                Get Lifetime Pro
               </Button>
             </>
           ) : step === "payment" ? (
@@ -102,30 +141,67 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-headline font-bold text-white tracking-widest">9849575920</span>
-                    <Badge className="bg-green-500/10 text-green-400 border-none">Active</Badge>
+                    <Badge className="bg-green-500/10 text-green-400 border-none">Online</Badge>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                    Enter Transaction ID (from your UPI App)
-                  </label>
-                  <Input 
-                    value={txnId}
-                    onChange={(e) => setTxnId(e.target.value)}
-                    placeholder="e.g. 40561234..."
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary"
-                  />
-                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                      1. Transaction ID
+                    </label>
+                    <Input 
+                      value={txnId}
+                      onChange={(e) => setTxnId(e.target.value)}
+                      placeholder="Enter the 12-digit UPI Txn ID"
+                      className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary"
+                    />
+                  </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <PaymentMethod icon={<Smartphone className="w-4 h-4" />} label="Google Pay" />
-                  <PaymentMethod icon={<CreditCard className="w-4 h-4" />} label="PhonePe" />
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                      2. Payment Screenshot
+                    </label>
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`relative border-2 border-dashed rounded-2xl p-6 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 ${screenshot ? 'border-primary/50 bg-primary/5' : 'border-white/10 hover:border-primary/30 bg-white/5'}`}
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        accept="image/*" 
+                        className="hidden" 
+                      />
+                      
+                      {screenshot ? (
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-white/10">
+                          <Image src={screenshot} alt="Payment Proof" fill className="object-cover" />
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setScreenshot(null); }}
+                            className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full hover:bg-red-500 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            {isUploading ? <Loader2 className="w-5 h-5 text-primary animate-spin" /> : <Upload className="w-5 h-5 text-primary" />}
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold">Click to Upload</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">JPEG, PNG up to 5MB</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <Button onClick={handleUpgrade} className="w-full h-14 rounded-xl text-lg font-bold bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/20">
-                Submit & Activate
+              <Button onClick={handleUpgrade} className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                Submit for Verification
               </Button>
               <button 
                 onClick={() => setStep("plans")}
@@ -141,9 +217,9 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-accent" />
               </div>
               <div className="space-y-2">
-                <p className="font-bold text-lg">Validating Transaction {txnId}</p>
+                <p className="font-bold text-lg">Verifying Screenshot & Txn ID</p>
                 <p className="text-sm text-muted-foreground px-4">
-                  Checking with your UPI provider. Please do not close this window.
+                  Our system is analyzing your screenshot for ID {txnId}.
                 </p>
               </div>
             </div>
@@ -159,15 +235,6 @@ function FeatureItem({ text }: { text: string }) {
     <div className="flex items-center gap-3">
       <CheckCircle2 className="w-5 h-5 text-primary" />
       <span className="text-sm font-medium text-white/80">{text}</span>
-    </div>
-  );
-}
-
-function PaymentMethod({ icon, label }: { icon: React.ReactNode, label: string }) {
-  return (
-    <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-white/5 bg-white/5 text-[10px] font-bold uppercase tracking-wider">
-      {icon}
-      {label}
     </div>
   );
 }
