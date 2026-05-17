@@ -1,30 +1,31 @@
+
 "use client";
 
 import { Product } from "@/ai/flows/ai-product-matcher-flow";
-import { ExternalLink, Star, Truck, ShieldCheck, Info } from "lucide-react";
+import { ExternalLink, Star, Truck, ShoppingCart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 interface ProductResultCardProps {
-  product: Product;
+  product: any; // Using any to accommodate the expanded Product schema from orchestrator
   isBestValue?: boolean;
 }
 
 export function ProductResultCard({ product, isBestValue }: ProductResultCardProps) {
-  const discount = Math.floor(Math.random() * 20) + 5;
+  const discount = Math.floor(Math.random() * 15) + 5;
   const rating = product.rating || (4 + Math.random()).toFixed(1);
-  const reviews = product.reviewsCount || Math.floor(Math.random() * 5000) + 100;
-  const delivery = product.deliveryEstimate || "2-4 days";
+  const reviews = product.reviewsCount || Math.floor(Math.random() * 3000) + 100;
+  const delivery = product.deliveryEstimate || "3-5 days";
   const stock = product.stockStatus || "In Stock";
-  const specs = product.specifications ? product.specifications.split(',').map(s => s.trim()) : [];
+  const specs = product.specifications ? product.specifications.split(',').map((s: string) => s.trim()) : [];
 
   return (
     <Card className={`relative overflow-hidden group border-white/5 transition-all hover:border-primary/50 ${isBestValue ? 'ring-2 ring-primary glow-primary' : ''}`}>
       {isBestValue && (
         <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider z-10">
-          AI Best Choice
+          AI Top Value
         </div>
       )}
       
@@ -35,7 +36,7 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
             alt={product.title}
             fill
             className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
-            data-ai-hint="product image"
+            data-ai-hint={product.imageHint || "product item"}
           />
         </div>
 
@@ -46,13 +47,14 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
                 <Badge variant="outline" className="border-accent text-accent bg-accent/10 font-bold uppercase tracking-tight">
                   {product.platform}
                 </Badge>
-                <Badge variant="secondary" className={`text-[10px] font-bold ${stock.toLowerCase().includes('only') ? 'text-orange-400' : 'text-green-400'}`}>
+                <Badge variant="secondary" className={`text-[10px] font-bold ${stock.toLowerCase().includes('only') || stock.toLowerCase().includes('low') ? 'text-orange-400' : 'text-green-400'}`}>
                   {stock}
                 </Badge>
               </div>
               <div className="flex items-center gap-1 text-yellow-500 font-bold text-sm">
                 <Star className="w-4 h-4 fill-current" />
                 {rating}
+                <span className="text-muted-foreground text-[10px] ml-1">({reviews.toLocaleString()})</span>
               </div>
             </div>
             
@@ -67,7 +69,7 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
 
             {specs.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {specs.slice(0, 4).map((spec, i) => (
+                {specs.slice(0, 5).map((spec: string, i: number) => (
                   <span key={i} className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-muted-foreground border border-white/5">
                     {spec}
                   </span>
@@ -98,7 +100,7 @@ export function ProductResultCard({ product, isBestValue }: ProductResultCardPro
               </div>
               <Button asChild className="glow-primary group-hover:glow-accent transition-all h-11 px-6 font-bold">
                 <a href={product.productUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                  View on {product.platform}
+                  View Deal
                   <ExternalLink className="w-4 h-4" />
                 </a>
               </Button>

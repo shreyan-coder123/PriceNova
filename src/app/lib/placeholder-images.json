@@ -2,28 +2,58 @@
 {
   "placeholderImages": [
     {
-      "id": "hero-bg",
-      "description": "Futuristic cosmic background",
-      "imageUrl": "https://picsum.photos/seed/nova1/1920/1080",
-      "imageHint": "cosmic nebula"
+      "id": "electronics",
+      "description": "General electronics category",
+      "imageUrl": "https://picsum.photos/seed/electronics/400/400",
+      "imageHint": "electronics technology"
     },
     {
-      "id": "iphone",
-      "description": "Latest smartphone",
-      "imageUrl": "https://picsum.photos/seed/phone/400/400",
-      "imageHint": "smartphone"
+      "id": "mobile",
+      "description": "Mobile phones and accessories",
+      "imageUrl": "https://picsum.photos/seed/mobile/400/400",
+      "imageHint": "smartphone mobile"
     },
     {
       "id": "laptop",
-      "description": "Gaming laptop",
+      "description": "Laptops and computers",
       "imageUrl": "https://picsum.photos/seed/laptop/400/400",
-      "imageHint": "laptop"
+      "imageHint": "laptop computer"
     },
     {
       "id": "shoes",
-      "description": "Running shoes",
+      "description": "Footwear and sneakers",
       "imageUrl": "https://picsum.photos/seed/shoes/400/400",
-      "imageHint": "sneakers"
+      "imageHint": "sneakers shoes"
+    },
+    {
+      "id": "fashion",
+      "description": "Clothing and fashion apparel",
+      "imageUrl": "https://picsum.photos/seed/fashion/400/400",
+      "imageHint": "fashion clothing"
+    },
+    {
+      "id": "stationery",
+      "description": "Pens, notebooks, and office supplies",
+      "imageUrl": "https://picsum.photos/seed/stationery/400/400",
+      "imageHint": "stationery pen"
+    },
+    {
+      "id": "watch",
+      "description": "Watches and timepieces",
+      "imageUrl": "https://picsum.photos/seed/watch/400/400",
+      "imageHint": "luxury watch"
+    },
+    {
+      "id": "beauty",
+      "description": "Cosmetics and beauty products",
+      "imageUrl": "https://picsum.photos/seed/beauty/400/400",
+      "imageHint": "cosmetics beauty"
+    },
+    {
+      "id": "home",
+      "description": "Home and kitchen appliances",
+      "imageUrl": "https://picsum.photos/seed/home/400/400",
+      "imageHint": "home appliances"
     }
   ]
 }

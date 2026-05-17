@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This flow is the main PriceNova AI Orchestrator.
@@ -14,7 +15,8 @@ const ProductSchema = z.object({
   description: z.string().describe('A detailed realistic product description'),
   price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
-  imageUrl: z.string().optional().describe('A realistic image URL using picsum.photos/seed/<id>/400/400'),
+  imageUrl: z.string().describe('A realistic image URL using picsum.photos/seed/<id>/400/400'),
+  imageHint: z.string().describe('A 1-2 word search keyword for the product image (e.g. "fountain pen", "running shoes")'),
   specifications: z.string().optional().describe('Detailed specifications (e.g., Processor, RAM, Color, etc.)'),
   rating: z.number().optional().describe('Average customer rating (out of 5)'),
   reviewsCount: z.number().optional().describe('Total number of reviews'),
@@ -52,27 +54,28 @@ const orchestratorPrompt = ai.definePrompt({
 INSTRUCTIONS:
 1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
    - Use ACTUAL brands and specific models.
-   - For 'imageUrl', use 'https://picsum.photos/seed/<unique_id>/400/400'. Use a unique seed for each product based on its title.
+   - For 'imageUrl', use 'https://picsum.photos/seed/<unique_id>/400/400'. Use a unique seed for each product.
+   - For 'imageHint', provide 1-2 words that best describe the visual item (e.g. "smartphone", "leather wallet").
 
 2. RIGOROUS REALISTIC PRICING (INR):
-   - Everyday Stationery (Pens/Pencils): ₹10 - ₹200 for single units or packs.
-   - Standard Electronics: ₹5,000 - ₹50,000.
-   - Flagship Mobiles/Laptops: ₹60,000 - ₹1,80,000.
-   - Fashion/Sneakers: ₹500 - ₹12,000.
-   - Luxury Items: Up to ₹5,00,000.
-   - MATCH THE PRICE TO THE CATEGORY.
+   - Everyday Stationery (Standard Pens/Pencils): ₹10 - ₹150.
+   - Premium Pens (Parker, Lamy): ₹300 - ₹5,000.
+   - Entry-level Electronics: ₹5,000 - ₹25,000.
+   - High-end Electronics: ₹30,000 - ₹2,50,000.
+   - Fashion/Sneakers: ₹400 - ₹15,000.
+   - MATCH THE PRICE TO THE EXACT MODEL AND CATEGORY.
 
 3. RICH PRODUCT DETAILS:
    - Provide a realistic 'description' (2-3 sentences).
-   - Include 'specifications' as a comma-separated list of key features.
-   - Generate realistic 'rating' (e.g. 3.8 to 4.9) and 'reviewsCount'.
+   - Include 'specifications' as a comma-separated list.
+   - Generate realistic 'rating' and 'reviewsCount'.
    - Provide a realistic 'stockStatus' and 'deliveryEstimate'.
 
 4. MATCH & GROUP: Analyze the simulated listings and group identical items (same brand, model, and variant) into matchedGroups.
 
 5. SHOPPING ADVICE: Identify the best overall deal among all the generated listings.
 
-IMPORTANT: Ensure the 'price' field is a raw number. Generate at least 15 unique product entries across multiple groups.`,
+IMPORTANT: Ensure 'price' is a raw number. Generate at least 15 unique product entries.`,
 });
 
 const priceNovaOrchestratorFlow = ai.defineFlow(
@@ -94,13 +97,16 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       const q = input.query.toLowerCase();
       let fallbackPrice = 499;
       let fallbackTitle = `${input.query} - Standard Edition`;
+      let fallbackHint = "product";
 
       if (q.includes('pen') || q.includes('pencil')) {
-        fallbackPrice = 45;
-        fallbackTitle = `Reynolds Jetter Classic Ball Pen`;
+        fallbackPrice = 25;
+        fallbackTitle = `Natraj Classic Pencil Pack`;
+        fallbackHint = "pencil";
       } else if (q.includes('phone') || q.includes('mobile')) {
-        fallbackPrice = 54999;
-        fallbackTitle = `${input.query} (128GB)`;
+        fallbackPrice = 12999;
+        fallbackTitle = `${input.query} (Entry Level)`;
+        fallbackHint = "smartphone";
       }
 
       const platforms = ['Amazon', 'Flipkart', 'Croma', 'Ajio'];
@@ -111,23 +117,24 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
             products: platforms.map((p, i) => ({
               platform: p,
               title: fallbackTitle,
-              description: `Top rated ${input.query} on ${p}. Premium build quality and durable design.`,
+              description: `Reliable ${input.query} with official warranty and great performance.`,
               price: Math.round(fallbackPrice * (1 + (i - 1) * 0.05)),
               productUrl: `https://${p.toLowerCase()}.com`,
               imageUrl: `https://picsum.photos/seed/${fallbackTitle}-${p}/400/400`,
-              specifications: 'Standard size, High-grade materials, Lightweight',
+              imageHint: fallbackHint,
+              specifications: 'Standard size, Durable, Lightweight',
               rating: 4.2 + (i * 0.1),
               reviewsCount: 1200 + (i * 500),
               stockStatus: 'In Stock',
-              deliveryEstimate: 'Tomorrow'
+              deliveryEstimate: '2-3 Days'
             }))
           }
         ],
         savingsAdvice: {
-          recommendationSummary: "Marketplace offers found.",
+          recommendationSummary: "Found competitive marketplace offers.",
           bestOfferPlatform: "Flipkart",
           bestOfferProductTitle: fallbackTitle,
-          reasoning: "Best current price for this standard model."
+          reasoning: "Best current price for this standard model with fast delivery."
         }
       };
 
