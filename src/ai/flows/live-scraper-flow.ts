@@ -75,12 +75,14 @@ YOUR TASK:
 2. GROUP identical products (EXACT same brand, model, and specs) into "matchedGroups".
 3. For each group, the "products" array should contain the offers for that specific item across different sources (Amazon, Flipkart, etc.).
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
-5. Standardize product titles to be professional and brand-heavy (e.g., "Campus TRINO Women Sneakers", "Apple iPhone 16 Pro 256GB"). 
+5. STRICLY Standardize product titles to be professional, specific, and BRAND-HEAVY. 
+   Format: "[Brand] [Model] [Version/Specs]".
+   Example: "Campus TRINO Women Sneakers", "Apple iPhone 16 Pro 256GB".
    THE TITLE MUST START WITH THE BRAND NAME FOLLOWED BY THE MODEL NAME.
-   DO NOT use generic names like "Standard Edition", "Latest Model", or just "Shoes". 
-   If the search result title is messy, clean it up to follow this "Brand Model" format.
+   DO NOT use generic names like "Standard Edition" or "Latest Model". 
+   If the search result title is messy, clean it up to follow this "Brand Model" format based on the context of the search query and the description.
 6. Use the highest quality thumbnail available as the imageUrl.
-7. For deliveryDays and trustScore, use realistic estimates based on the source (e.g., Amazon/Flipkart: 2-4 days, 90-95% trust; smaller sites: 5-7 days, 70-80% trust).
+7. For deliveryDays and trustScore, use realistic estimates based on the source (e.g., Amazon/Flipkart: 2-4 days, 95% trust; smaller sites: 5-7 days, 75% trust).
 
 RAW RESULTS FROM SEARCH:
 {{#each rawResults}}
@@ -121,6 +123,7 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       return output;
     } catch (error: any) {
       console.error('Orchestrator Processing Error:', error);
+      // Ensure we pass a clean error message to the UI
       throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
     }
   }
