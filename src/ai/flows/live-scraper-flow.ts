@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: 'gemini-1.5-flash',
+  model: 'googleai/gemini-1.5-flash',
   input: { 
     schema: z.object({ 
       query: z.string(),
