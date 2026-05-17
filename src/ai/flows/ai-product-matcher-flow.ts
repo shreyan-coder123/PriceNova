@@ -59,15 +59,23 @@ const productMatcherPrompt = ai.definePrompt({
   prompt: `You are an intelligent AI product matcher. Your primary goal is to analyze a given list of products from various e-commerce platforms and accurately group together products that are identical. This means they are the same model, variant (e.g., storage, color), and type, even if their titles or descriptions have minor differences.
 
 Instructions:
-1.  Carefully examine each product's 'platform', 'title', 'description', 'price', 'productUrl', 'imageUrl', and 'specifications'.
-2.  Normalize product names and identify core distinguishing features.
-3.  Group products that refer to the exact same item. Products with different variants (e.g., "iPhone 16 Pro Max 256GB" vs. "iPhone 16 Pro Max 512GB") should be placed in separate groups, as they are not identical.
-4.  If a product does not have any identical matches, it should be placed in its own group.
-5.  Assign a unique 'groupId' (e.g., "group-1", "group-2", etc.) to each identified group of identical products.
-6.  Ensure that the 'products' array within each group contains the full original product objects provided in the input, without any modification to their internal structure or values.
+1. Carefully examine each product's details.
+2. Group products that refer to the exact same item. 
+3. Products with different variants (e.g., different storage or colors) should be in separate groups.
+4. If a product has no matches, it stays in its own group.
+5. Assign a unique 'groupId' to each group.
+6. Return the full original product objects in the 'products' array of each group.
 
-Input Products (JSON array):
-{{{JSON.stringify products}}}`,
+Input Products:
+{{#each products}}
+- Platform: {{platform}}
+  Title: {{title}}
+  Price: {{price}}
+  Description: {{description}}
+  URL: {{productUrl}}
+  Specs: {{specifications}}
+---
+{{/each}}`,
 });
 
 const aiProductMatcherFlow = ai.defineFlow(
