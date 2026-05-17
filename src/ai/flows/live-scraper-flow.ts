@@ -56,13 +56,14 @@ async function fetchLiveShoppingData(query: string) {
 }
 
 /**
- * Normalizes title for grouping by removing noise words and focusing on model/brand
+ * Normalizes title for grouping by removing noise words and focusing on core product identification.
  */
 function getGroupingKey(title: string): string {
   const noiseWords = [
     'pack', 'of', 'blue', 'black', 'red', 'green', 'ink', 'pen', 'set', 'pcs', 
     'genuine', 'original', 'free', 'shipping', 'multi', 'color', 'new', 'latest',
-    'buy', 'online', 'india', 'best', 'price', '157', 'ub', 'eye', 'rollerball', 'micro', 'fine'
+    'buy', 'online', 'india', 'best', 'price', '157', 'ub', 'eye', 'rollerball', 
+    'micro', 'fine', 'women', 'men', 'certified', 'authentic'
   ];
   
   const clean = title.toLowerCase()
@@ -70,8 +71,9 @@ function getGroupingKey(title: string): string {
     .split(/\s+/)
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
-  // Return the first 2-3 core identifying words to cluster variants across platforms
-  return clean.slice(0, 2).join(' ');
+  // Return the first 3 core identifying words to cluster variants across platforms
+  // This increases the chance of matches between Amazon "Uni-ball Pen" and Flipkart "UniBall Eye Pen"
+  return clean.slice(0, 3).join(' ');
 }
 
 /**
@@ -121,7 +123,7 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       // Sort within the group by price (ascending)
       const sortedProducts = products.sort((a, b) => a.price - b.price);
       
-      // Ensure unique platforms per group
+      // Ensure unique platforms per group for comparison
       const uniquePlatformProducts = [];
       const seenPlatforms = new Set();
       
@@ -138,23 +140,19 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       };
     });
 
-    // CRITICAL: Filter and prioritize groups that have at least 2 platforms, ideally 3+
-    const multiPlatformGroups = matchedGroups.filter(g => g.products.length >= 2);
-    const singlePlatformGroups = matchedGroups.filter(g => g.products.length === 1);
-
-    multiPlatformGroups.sort((a, b) => {
-      const aPlatforms = a.products.length;
-      const bPlatforms = b.products.length;
+    // Sort to prioritize groups with the MOST platforms (best comparisons)
+    matchedGroups.sort((a, b) => {
+      const aCount = a.products.length;
+      const bCount = b.products.length;
       
-      // Prioritize groups with more platforms
-      if (bPlatforms !== aPlatforms) {
-        return bPlatforms - aPlatforms;
+      if (bCount !== aCount) {
+        return bCount - aCount; // Put groups with 3+ platforms first
       }
       
-      return a.products[0].price - b.products[0].price;
+      return a.products[0].price - b.products[0].price; // Then sort by lowest price
     });
 
-    return { matchedGroups: [...multiPlatformGroups, ...singlePlatformGroups] };
+    return { matchedGroups };
   } catch (error: any) {
     console.error('Orchestrator Error:', error);
     throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');

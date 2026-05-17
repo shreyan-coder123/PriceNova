@@ -49,7 +49,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             alt={bestOffer.title}
             fill
             className="object-contain p-4 group-hover:scale-110 transition-transform duration-700"
-            unoptimized={bestOffer.imageUrl.includes('gstatic.com') || bestOffer.imageUrl.includes('google.com')}
+            unoptimized={true}
           />
           {platformCount > 1 && (
             <Badge className="absolute bottom-3 left-3 bg-accent/90 text-white border-none backdrop-blur-md px-3 py-1 text-[10px] font-bold flex items-center gap-1.5 shadow-lg">
@@ -104,7 +104,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
             <Dialog>
               <DialogTrigger asChild>
                 <button className="h-10 px-5 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all text-xs font-bold flex items-center gap-2 group/btn border border-primary/20">
-                  {platformCount > 1 ? `Compare All ${platformCount} Stores` : `View Details`}
+                  {platformCount > 1 ? `Compare ${platformCount} Offers` : `View Details`}
                   <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                 </button>
               </DialogTrigger>
@@ -124,7 +124,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                         alt={bestOffer.title} 
                         fill 
                         className="object-contain p-2"
-                        unoptimized={bestOffer.imageUrl.includes('gstatic.com') || bestOffer.imageUrl.includes('google.com')}
+                        unoptimized={true}
                       />
                     </div>
                     <div className="space-y-4">
@@ -133,7 +133,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                           {bestOffer.category}
                         </Badge>
                         <Badge variant="outline" className="text-[10px] uppercase font-bold px-3 py-1 border-white/10">
-                          Live Real-time Scan
+                          Real-time Market Scan
                         </Badge>
                       </div>
                       <h4 className="font-headline font-bold text-2xl leading-tight">{bestOffer.title}</h4>
@@ -145,7 +145,7 @@ export function ProductResultCard({ group, isBestValue }: ProductResultCardProps
                     <div className="flex items-center justify-between">
                       <h5 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
                         <Globe className="w-4 h-4 text-primary" />
-                        Marketplace Comparison Results
+                        Platform Price Comparison
                       </h5>
                     </div>
                     <div className="grid gap-3">
