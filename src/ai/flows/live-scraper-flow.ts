@@ -62,7 +62,8 @@ function getGroupingKey(title: string): string {
     'pack', 'of', 'blue', 'black', 'red', 'green', 'ink', 'pen', 'set', 'pcs', 
     'genuine', 'original', 'free', 'shipping', 'multi', 'color', 'new', 'latest',
     'buy', 'online', 'india', 'best', 'price', 'eye', 'rollerball', 
-    'micro', 'fine', 'women', 'men', 'certified', 'authentic', '157', 'ub'
+    'micro', 'fine', 'women', 'men', 'certified', 'authentic', '157', 'ub',
+    'mobile', 'phone', 'smartphone', 'electronics', 'appliance', 'official', 'warranty'
   ];
   
   const clean = title.toLowerCase()
@@ -71,7 +72,7 @@ function getGroupingKey(title: string): string {
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
   // Return the first 2-3 core identifying words to cluster variants across platforms
-  // This drastically increases the chance of matches between Amazon and Flipkart
+  // We use a shorter key to be more "fuzzy" and catch matches between Amazon and Flipkart
   return clean.slice(0, 3).join(' ');
 }
 
@@ -100,7 +101,7 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       const product = {
         platform: matchedPlatform,
         title: item.title,
-        description: item.description || `Verified offer from ${matchedPlatform}. High-quality ${item.title} available with fast shipping.`,
+        description: item.description || `Verified offer from ${matchedPlatform}. High-quality product available with fast shipping.`,
         price: price,
         productUrl: item.link,
         imageUrl: item.thumbnail,
@@ -122,14 +123,14 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
 
     const matchedGroups = Array.from(groupsMap.entries())
       .map(([key, products], index) => {
-        // Sort within the group by price (ascending)
-        const sortedProducts = products.sort((a, b) => a.price - b.price);
-        
-        // Ensure unique platforms per group for comparison
+        // Ensure unique platforms per group for a real comparison
         const uniquePlatformProducts = [];
         const seenPlatforms = new Set();
         
-        for (const p of sortedProducts) {
+        // Sort within the group by price (ascending) first to pick the best price per platform
+        const sortedByPrice = products.sort((a, b) => a.price - b.price);
+
+        for (const p of sortedByPrice) {
           if (!seenPlatforms.has(p.platform)) {
             uniquePlatformProducts.push(p);
             seenPlatforms.add(p.platform);
@@ -141,26 +142,27 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
           products: uniquePlatformProducts,
         };
       })
-      .filter(g => g.products.length > 0); // Only keep groups with at least 1 product
+      .filter(g => g.products.length > 0); 
 
-    // Sort to prioritize groups with the HIGHEST platform diversity (3+ platforms)
+    // CRITICAL: Sort to prioritize groups with at least 3 platforms to satisfy comparison requirement
     matchedGroups.sort((a, b) => {
       const aCount = a.products.length;
       const bCount = b.products.length;
       
-      // If one group has 3+ platforms and the other doesn't, put the 3+ one first
+      // Prioritize groups with 3+ platforms
       if (aCount >= 3 && bCount < 3) return -1;
       if (bCount >= 3 && aCount < 3) return 1;
       
-      // Otherwise sort by count descending, then by price
+      // If both have 3+ or both have < 3, sort by platform diversity count
       if (bCount !== aCount) {
         return bCount - aCount;
       }
       
+      // If still tied, sort by best price
       return a.products[0].price - b.products[0].price;
     });
 
-    return { matchedGroups: matchedGroups.slice(0, 15) }; // Return top 15 groups
+    return { matchedGroups: matchedGroups.slice(0, 15) };
   } catch (error: any) {
     console.error('Orchestrator Error:', error);
     throw new Error(error.message || 'The PriceNova engine encountered an unexpected error.');
