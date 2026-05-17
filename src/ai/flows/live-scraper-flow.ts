@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'gemini-1.5-flash',
   input: { 
     schema: z.object({ 
       query: z.string(),
@@ -65,7 +65,7 @@ const orchestratorPrompt = ai.definePrompt({
   },
   output: { schema: OrchestratorOutputSchema },
   config: {
-    temperature: 0.1, // Lower temperature for more accurate data extraction
+    temperature: 0.1,
   },
   prompt: `You are the PriceNova AI Market Intelligence Orchestrator. 
 I have fetched real-time shopping results for: "{{query}}" from Google Shopping.
@@ -108,7 +108,7 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
 
       const { output } = await orchestratorPrompt({ 
         query: input.query, 
-        rawResults: rawResults.slice(0, 25) // Process top 25 results
+        rawResults: rawResults.slice(0, 25) 
       });
       
       if (!output || !output.matchedGroups || output.matchedGroups.length === 0) {

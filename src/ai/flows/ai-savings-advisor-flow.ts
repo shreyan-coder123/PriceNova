@@ -38,7 +38,7 @@ export type AISavingsAdvisorOutput = z.infer<typeof AISavingsAdvisorOutputSchema
 
 const advisorPrompt = ai.definePrompt({
   name: 'aiSavingsAdvisorPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'gemini-1.5-flash',
   input: {schema: AISavingsAdvisorInputSchema},
   output: {schema: AISavingsAdvisorOutputSchema},
   config: {
