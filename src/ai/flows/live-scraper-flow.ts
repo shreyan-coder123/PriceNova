@@ -40,7 +40,7 @@ const TARGET_PLATFORMS = ["Amazon", "Flipkart", "Myntra", "Ajio", "Croma", "Nyka
  * Fetches real shopping results from SerpApi
  */
 async function fetchLiveShoppingData(query: string) {
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in`;
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&hl=en&gl=in&google_domain=google.co.in&num=40`;
   
   try {
     const response = await fetch(url);
@@ -56,17 +56,22 @@ async function fetchLiveShoppingData(query: string) {
 }
 
 /**
- * Normalizes title for grouping using a more aggressive match key
+ * Normalizes title for grouping by removing noise words and focusing on model/brand
  */
 function getGroupingKey(title: string): string {
-  // Clean the title and take the first few core identifying words
-  const clean = title.toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter(word => word.length > 2);
+  const noiseWords = [
+    'pack', 'of', 'blue', 'black', 'red', 'green', 'ink', 'pen', 'set', 'pcs', 
+    'genuine', 'original', 'free', 'shipping', 'multi', 'color', 'new', 'latest',
+    'buy', 'online', 'india', 'best', 'price'
+  ];
   
-  // Use first 4 words as a broad matching key for identical models
-  return clean.slice(0, 4).join(' ');
+  const clean = title.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !noiseWords.includes(word));
+  
+  // Return the first 3 core identifying words to cluster variants
+  return clean.slice(0, 3).join(' ');
 }
 
 /**
@@ -87,8 +92,6 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       const price = parseFloat(priceStr) || 0;
       
       const source = item.source || "Marketplace";
-      
-      // Determine if source is one of our target platforms
       const matchedPlatform = TARGET_PLATFORMS.find(p => 
         source.toLowerCase().includes(p.toLowerCase())
       ) || source;
@@ -101,8 +104,8 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
         productUrl: item.link,
         imageUrl: item.thumbnail,
         category: item.category || "General",
-        rating: item.rating ? parseFloat(item.rating) : 4.0,
-        reviewsCount: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, "")) : 0,
+        rating: item.rating ? parseFloat(item.rating) : 4.2,
+        reviewsCount: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, "")) : 100,
         deliveryDays: TARGET_PLATFORMS.includes(matchedPlatform) ? 2 : 4,
         trustScore: TARGET_PLATFORMS.includes(matchedPlatform) ? 98 : 82,
       };
@@ -115,10 +118,10 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
     });
 
     const matchedGroups = Array.from(groupsMap.entries()).map(([key, products], index) => {
-      // Sort products within the group by price
+      // Sort within the group by price (ascending)
       const sortedProducts = products.sort((a, b) => a.price - b.price);
       
-      // Filter for unique platforms in comparison
+      // Ensure unique platforms per group
       const uniquePlatformProducts = [];
       const seenPlatforms = new Set();
       
@@ -135,13 +138,13 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       };
     });
 
-    // Prioritize groups that have results from our TARGET_PLATFORMS
+    // Prioritize groups that have multiple platforms
     matchedGroups.sort((a, b) => {
-      const aTargetCount = a.products.filter(p => TARGET_PLATFORMS.includes(p.platform)).length;
-      const bTargetCount = b.products.filter(p => TARGET_PLATFORMS.includes(p.platform)).length;
+      const aPlatforms = a.products.length;
+      const bPlatforms = b.products.length;
       
-      if (bTargetCount !== aTargetCount) {
-        return bTargetCount - aTargetCount;
+      if (bPlatforms !== aPlatforms) {
+        return bPlatforms - aPlatforms;
       }
       
       return a.products[0].price - b.products[0].price;
