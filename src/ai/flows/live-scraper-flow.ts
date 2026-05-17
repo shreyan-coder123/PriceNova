@@ -75,7 +75,6 @@ function getGroupingKey(title: string): string {
     .filter(word => word.length > 2 && !noiseWords.includes(word));
   
   // Return the first 2-3 core identifying words to cluster variants across platforms
-  // This allows "iPhone 16" and "Apple iPhone 16" to group together more effectively
   return clean.slice(0, 3).join(' ');
 }
 
@@ -126,11 +125,8 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
 
     const matchedGroups = Array.from(groupsMap.entries())
       .map(([key, products], index) => {
-        // Ensure unique platforms per group for a real comparison
         const uniquePlatformProducts = [];
         const seenPlatforms = new Set();
-        
-        // Sort within the group by price (ascending)
         const sortedByPrice = products.sort((a, b) => a.price - b.price);
 
         for (const p of sortedByPrice) {
@@ -147,16 +143,12 @@ export async function searchProductNova(query: string): Promise<OrchestratorOutp
       })
       .filter(g => g.products.length > 0); 
 
-    // CRITICAL: Sort to prioritize groups with the most platform diversity (3+)
+    // PRIORITIZE groups with 3 or more platform comparisons
     matchedGroups.sort((a, b) => {
       const aCount = a.products.length;
       const bCount = b.products.length;
-      
-      // Prioritize groups with 3+ platforms
       if (aCount >= 3 && bCount < 3) return -1;
       if (bCount >= 3 && aCount < 3) return 1;
-      
-      // If diversity is same, sort by overall relevance (platform count)
       return bCount - aCount;
     });
 

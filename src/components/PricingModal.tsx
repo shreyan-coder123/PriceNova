@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Zap, Crown, Smartphone, CreditCard, CheckCircle2, Loader2, ShieldCheck, Upload, FileText, Image as ImageIcon, X } from "lucide-react";
+import { Crown, Smartphone, Loader2, ShieldCheck, Upload, X, CheckCircle2 } from "lucide-react";
 import { setProStatus } from "@/lib/search-store";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -77,7 +77,6 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
 
     setStep("verifying");
     
-    // Simulate deep payment and screenshot verification
     setTimeout(() => {
       setProStatus(true);
       if (onSuccess) onSuccess();
@@ -93,7 +92,7 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md bg-[#16181d] border-white/10 text-white p-0 overflow-hidden rounded-3xl">
         <DialogHeader className="p-8 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent border-b border-white/5">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center mb-4 glow-primary">
+          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
             <Crown className="text-white w-7 h-7" />
           </div>
           <DialogTitle className="text-3xl font-headline font-bold">
@@ -127,7 +126,7 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                 <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">Instant Activation</Badge>
               </div>
 
-              <Button onClick={() => setStep("payment")} className="w-full h-14 rounded-xl text-lg font-bold glow-primary">
+              <Button onClick={() => setStep("payment")} className="w-full h-14 rounded-xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                 Get Lifetime Pro
               </Button>
             </>
@@ -153,7 +152,7 @@ export function PricingModal({ isOpen, onClose, onSuccess }: PricingModalProps) 
                     <Input 
                       value={txnId}
                       onChange={(e) => setTxnId(e.target.value)}
-                      placeholder="Enter the 12-digit UPI Txn ID"
+                      placeholder="Enter the UPI Txn ID"
                       className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary"
                     />
                   </div>
