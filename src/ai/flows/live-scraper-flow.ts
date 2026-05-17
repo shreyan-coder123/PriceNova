@@ -5,14 +5,14 @@
  * Gemini to group identical products into matched sets for comparison.
  */
 
-import { ai, googleAIPlugin } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra)'),
-  title: z.string().describe('The professional title: BRAND (ALL CAPS) followed by MODEL (e.g., "CAMPUS TRINO Women Sneakers")'),
+  title: z.string().describe('The professional title: BRAND (ALL CAPS) followed by MODEL'),
   description: z.string().describe('A realistic product description.'),
   price: z.coerce.number().describe('The price in INR (number only)'),
   productUrl: z.string().describe('The direct link to the product'),
@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: googleAIPlugin.model('gemini-1.5-flash'),
+  model: 'googleai/gemini-1.5-flash',
   input: { 
     schema: z.object({ 
       query: z.string(),
@@ -74,10 +74,6 @@ YOUR MISSION: Provide the most professional market comparison data possible.
 
 STRICT TITLING RULE:
 Every product "title" in your output MUST start with the BRAND NAME in ALL CAPS followed by the MODEL name.
-- Example: "Trino Women's Running Shoes" -> Output: "CAMPUS TRINO Women Sneakers"
-- Example: "Apple iPhone 16 Pro 256GB" -> Output: "APPLE iPhone 16 Pro 256GB"
-- Example: "Red Tape Men Sneakers" -> Output: "RED TAPE Men Sneakers"
-
 If the brand is not explicitly in the input title, INFER IT from the context or platform. DO NOT use generic names.
 
 DATA GROUPING:
