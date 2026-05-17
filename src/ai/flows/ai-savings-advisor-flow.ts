@@ -3,44 +3,38 @@
  * @fileOverview An AI shopping advisor that recommends the best product deal.
  */
 
-import { ai, googleAIPlugin } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ProductOfferSchema = z.object({
-  platform: z.string().describe('The name of the e-commerce platform.'),
-  productTitle: z.string().describe('The title of the product.'),
-  price: z.coerce.number().describe('The price of the product.'),
-  discount: z.number().optional().describe('The discount percentage.'),
-  rating: z.number().optional().describe('The average customer rating.'),
-  numberOfReviews: z.number().optional().describe('The total number of reviews.'),
-  deliveryEstimate: z.string().describe('The estimated delivery time.'),
-  sellerName: z.string().optional().describe('The name of the seller.'),
-  stockStatus: z.string().describe('The current stock availability status.'),
-  productUrl: z.string().url().describe('The URL to the product page.'),
+  platform: z.string(),
+  productTitle: z.string(),
+  price: z.coerce.number(),
+  productUrl: z.string().url(),
 });
 
 const AISavingsAdvisorInputSchema = z.object({
-  productOffers: z.array(ProductOfferSchema).min(1).describe('A list of product offers.'),
+  productOffers: z.array(ProductOfferSchema).min(1),
 });
 export type AISavingsAdvisorInput = z.infer<typeof AISavingsAdvisorInputSchema>;
 
 const AISavingsAdvisorOutputSchema = z.object({
-  recommendationSummary: z.string().describe('A summary explaining the best overall deal.'),
-  bestOfferPlatform: z.string().describe('The platform name.'),
-  bestOfferProductTitle: z.string().describe('The title of the best product.'),
-  reasoning: z.string().describe('Explanation of why this offer was selected.'),
+  recommendationSummary: z.string(),
+  bestOfferPlatform: z.string(),
+  bestOfferProductTitle: z.string(),
+  reasoning: z.string(),
 });
 export type AISavingsAdvisorOutput = z.infer<typeof AISavingsAdvisorOutputSchema>;
 
 const advisorPrompt = ai.definePrompt({
   name: 'aiSavingsAdvisorPrompt',
-  model: googleAIPlugin.model('gemini-1.5-flash'),
+  model: 'googleai/gemini-1.5-flash',
   input: {schema: AISavingsAdvisorInputSchema},
   output: {schema: AISavingsAdvisorOutputSchema},
   config: {
     temperature: 0.2,
   },
-  prompt: `You are an intelligent shopping advisor. Identify the best deal from these offers:
+  prompt: `Identify the best deal from these offers:
 
 {{#each productOffers}}
 Platform: {{this.platform}}
@@ -68,7 +62,7 @@ const aiSavingsAdvisorFlow = ai.defineFlow(
         recommendationSummary: `We recommend buying from ${cheapest.platform} for the best price.`,
         bestOfferPlatform: cheapest.platform,
         bestOfferProductTitle: cheapest.productTitle,
-        reasoning: "Cheapest price found in current simulation.",
+        reasoning: "Cheapest price found.",
       };
     }
   }

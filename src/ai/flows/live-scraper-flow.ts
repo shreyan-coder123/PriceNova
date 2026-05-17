@@ -5,7 +5,7 @@
  * Gemini to group identical products into matched sets for comparison.
  */
 
-import { ai, googleAIPlugin } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SERPAPI_KEY = '49bc32a0f0059a489b59c21d27e56a67c34619f08f77b6de9643a601753e2676';
@@ -56,7 +56,7 @@ async function fetchLiveShoppingData(query: string) {
 
 const orchestratorPrompt = ai.definePrompt({
   name: 'orchestratorPrompt',
-  model: googleAIPlugin.model('gemini-1.5-flash'),
+  model: 'googleai/gemini-1.5-flash',
   input: { 
     schema: z.object({ 
       query: z.string(),
@@ -77,7 +77,7 @@ YOUR TASK:
 4. IMPORTANT: Extract the price as a raw number. If the input is "₹4,599", the output must be 4599.
 5. Standardize product titles to be professional and brand-heavy (e.g., "Campus TRINO Women Sneakers", "Apple iPhone 16 Pro 256GB"). 
    DO NOT use generic names like "Standard Edition", "Latest Model", or just "Shoes". 
-   The title MUST include the brand and the specific model name.
+   The title MUST include the brand and the specific model name as shown in the example.
 6. Use the highest quality thumbnail available as the imageUrl.
 7. For deliveryDays and trustScore, use realistic estimates based on the source (e.g., Amazon/Flipkart: 2-4 days, 90-95% trust; smaller sites: 5-7 days, 70-80% trust).
 
