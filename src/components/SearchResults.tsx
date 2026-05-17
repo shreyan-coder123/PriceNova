@@ -86,18 +86,13 @@ export function SearchResults({ query }: SearchResultsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {groups.map((group, idx) => {
-        // Find the best offer in the group (lowest price)
-        const bestOffer = [...group.products].sort((a, b) => a.price - b.price)[0];
-        return (
-          <ProductResultCard 
-            key={group.groupId} 
-            product={bestOffer} 
-            isBestValue={idx === 0}
-            platformCount={group.products.length}
-          />
-        );
-      })}
+      {groups.map((group, idx) => (
+        <ProductResultCard 
+          key={group.groupId} 
+          group={group} 
+          isBestValue={idx === 0}
+        />
+      ))}
     </div>
   );
 }
