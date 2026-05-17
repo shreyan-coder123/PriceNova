@@ -7,7 +7,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import placeholderData from '@/app/lib/placeholder-images.json';
 
 const ProductSchema = z.object({
   platform: z.string().describe('The platform name (e.g. Amazon, Flipkart, Myntra, Ajio)'),
@@ -15,9 +14,9 @@ const ProductSchema = z.object({
   description: z.string().describe('A detailed realistic product description (3-4 sentences)'),
   price: z.coerce.number().describe('The raw price as a number in INR'),
   productUrl: z.string().describe('A realistic URL to the product'),
-  imageUrl: z.string().describe('The URL from the category in placeholder-images.json'),
-  imageHint: z.string().describe('A 1-2 word search keyword for the product image (e.g. "fountain pen", "gaming laptop")'),
-  category: z.string().describe('One of: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home'),
+  imageUrl: z.string().describe('The URL using the format https://picsum.photos/seed/{unique_seed}/400/400'),
+  imageHint: z.string().describe('A 1-2 word search keyword for the product image (e.g. "saree cover", "fountain pen")'),
+  category: z.string().describe('One of: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home, decor'),
   specifications: z.string().optional().describe('Detailed specifications (e.g., Processor, RAM, Color, etc.)'),
   rating: z.number().optional().describe('Average customer rating (out of 5)'),
   reviewsCount: z.number().optional().describe('Total number of reviews'),
@@ -58,25 +57,16 @@ const orchestratorPrompt = ai.definePrompt({
 INSTRUCTIONS:
 1. MARKET SIMULATION: Generate 15-20 highly realistic product listings as they would appear TODAY on major Indian platforms (Amazon, Flipkart, Myntra, Ajio, Croma, Nykaa, Meesho).
    - Use ACTUAL brands and specific models.
-   - Assign each product to one of these CATEGORIES: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home.
-   - For 'imageHint', provide exactly 1-2 words that best describe the visual item (e.g. "smartphone", "leather wallet").
-   - For 'imageUrl', use the URL corresponding to the category:
-     * electronics: https://picsum.photos/seed/electronics/400/400
-     * mobile: https://picsum.photos/seed/mobile/400/400
-     * laptop: https://picsum.photos/seed/laptop/400/400
-     * shoes: https://picsum.photos/seed/shoes/400/400
-     * fashion: https://picsum.photos/seed/fashion/400/400
-     * stationery: https://picsum.photos/seed/stationery/400/400
-     * watch: https://picsum.photos/seed/watch/400/400
-     * beauty: https://picsum.photos/seed/beauty/400/400
-     * home: https://picsum.photos/seed/home/400/400
+   - For 'imageHint', provide exactly 1-2 words that best describe the visual item (e.g. "saree covers", "smartphone").
+   - For 'imageUrl', use: https://picsum.photos/seed/{slugified_title_and_platform}/400/400 to ensure a unique consistent image per result.
+   - Assign each product to one of these CATEGORIES: electronics, mobile, laptop, shoes, fashion, stationery, watch, beauty, home, decor.
 
 2. PRICING RULES (INR):
+   - Home Decor/Storage (like Saree Covers): ₹150 - ₹999 (packs).
    - Pens/Stationery: ₹10 - ₹500 (standard), ₹1,000+ (luxury).
    - Phones: ₹10,000 - ₹1,50,000.
    - Laptops: ₹30,000 - ₹2,50,000.
-   - Fashion: ₹500 - ₹10,000.
-   - MATCH THE PRICE TO THE EXACT MODEL.
+   - MATCH THE PRICE TO THE EXACT MODEL AND PACK SIZE.
 
 3. RICH DETAILS:
    - Provide a realistic 'description' (3-4 sentences).
@@ -107,10 +97,15 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
       const q = input.query.toLowerCase();
       let fallbackPrice = 499;
       let fallbackTitle = `${input.query} - Standard Edition`;
-      let fallbackHint = "product";
-      let fallbackCategory = "electronics";
+      let fallbackHint = input.query;
+      let fallbackCategory = "home";
 
-      if (q.includes('pen') || q.includes('pencil')) {
+      if (q.includes('saree')) {
+        fallbackPrice = 299;
+        fallbackTitle = `Premium Saree Cover Set (Pack of 12)`;
+        fallbackHint = "saree cover";
+        fallbackCategory = "home";
+      } else if (q.includes('pen') || q.includes('pencil')) {
         fallbackPrice = 25;
         fallbackTitle = `Natraj Classic Pencil Pack`;
         fallbackHint = "pencil";
@@ -127,31 +122,34 @@ const priceNovaOrchestratorFlow = ai.defineFlow(
         matchedGroups: [
           {
             groupId: 'group-1',
-            products: platforms.map((p, i) => ({
-              platform: p,
-              title: fallbackTitle,
-              description: `Reliable ${input.query} with official warranty and great performance. Ideal for daily usage and comes with a durable build quality.`,
-              price: Math.round(fallbackPrice * (1 + (i - 1) * 0.05)),
-              productUrl: `https://${p.toLowerCase()}.com`,
-              imageUrl: `https://picsum.photos/seed/${fallbackCategory}/400/400`,
-              imageHint: fallbackHint,
-              category: fallbackCategory,
-              specifications: 'Standard size, Durable, Lightweight',
-              rating: 4.2 + (i * 0.1),
-              reviewsCount: 1200 + (i * 500),
-              stockStatus: 'In Stock',
-              deliveryEstimate: '2-3 Days',
-              warranty: '1 Year Manufacturer Warranty',
-              sellerName: `${p} Retail Pvt Ltd`,
-              sellerRating: 4.5
-            }))
+            products: platforms.map((p, i) => {
+              const uniqueId = `${input.query.replace(/\s+/g, '-')}-${p.toLowerCase()}-${i}`;
+              return {
+                platform: p,
+                title: fallbackTitle,
+                description: `Reliable ${input.query} with high durability and premium build. Ideal for daily usage and organization in modern Indian homes.`,
+                price: Math.round(fallbackPrice * (1 + (i - 1) * 0.05)),
+                productUrl: `https://${p.toLowerCase()}.com`,
+                imageUrl: `https://picsum.photos/seed/${uniqueId}/400/400`,
+                imageHint: fallbackHint,
+                category: fallbackCategory,
+                specifications: 'Durable material, High capacity, Transparent window',
+                rating: 4.2 + (i * 0.1),
+                reviewsCount: 1200 + (i * 500),
+                stockStatus: 'In Stock',
+                deliveryEstimate: '2-3 Days',
+                warranty: '1 Year Manufacturer Warranty',
+                sellerName: `${p} Retail Pvt Ltd`,
+                sellerRating: 4.5
+              };
+            })
           }
         ],
         savingsAdvice: {
-          recommendationSummary: "Found competitive marketplace offers.",
+          recommendationSummary: `Found competitive marketplace offers for your search "${input.query}".`,
           bestOfferPlatform: "Flipkart",
           bestOfferProductTitle: fallbackTitle,
-          reasoning: "Best current price for this standard model with fast delivery."
+          reasoning: "Best current price for this standard model with fast delivery and high seller ratings."
         }
       };
 
