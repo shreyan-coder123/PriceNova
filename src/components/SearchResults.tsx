@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { scrapeRealTimeProducts } from "@/ai/flows/live-scraper-flow";
-import { matchProducts, ProductMatcherOutput } from "@/ai/flows/ai-product-matcher-flow";
-import { aiSavingsAdvisor, AISavingsAdvisorOutput } from "@/ai/flows/ai-savings-advisor-flow";
+import { searchProductNova, OrchestratorOutput } from "@/ai/flows/live-scraper-flow";
 import { ProductResultCard } from "./ProductResultCard";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Sparkles, TrendingDown, Info, Lock, RefreshCcw } from "lucide-react";
@@ -16,11 +14,9 @@ interface SearchResultsProps {
 
 export function SearchResults({ query }: SearchResultsProps) {
   const [loading, setLoading] = useState(true);
-  const [matchedResults, setMatchedResults] = useState<ProductMatcherOutput | null>(null);
-  const [savingsAdvice, setSavingsAdvice] = useState<AISavingsAdvisorOutput | null>(null);
+  const [results, setResults] = useState<OrchestratorOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
-  const [currentStep, setCurrentStep] = useState<string>("");
 
   async function performSearch() {
     setLoading(true);
@@ -28,7 +24,7 @@ export function SearchResults({ query }: SearchResultsProps) {
     
     const pro = isUserPro();
     const count = getSearchCount();
-    if (!pro && count >= 20) { // Increased limit for testing
+    if (!pro && count >= 20) {
       setLimitReached(true);
       setLoading(false);
       return;
@@ -36,38 +32,19 @@ export function SearchResults({ query }: SearchResultsProps) {
 
     try {
       incrementSearchCount();
-
-      // 1. Live AI "Scraping"
-      setCurrentStep("Fetching live details from Amazon, Flipkart, Croma...");
-      const scraped = await scrapeRealTimeProducts({ query });
+      // Single consolidated AI call for speed and reliability
+      const data = await searchProductNova(query);
       
-      // 2. AI Identity Matching
-      setCurrentStep("Normalizing variants and matching products...");
-      const matched = await matchProducts({ products: scraped.products });
-      setMatchedResults(matched);
-
-      // 3. AI Savings Advice
-      if (matched.matchedGroups.length > 0) {
-        setCurrentStep("Calculating best value with PriceNova Advisor...");
-        const topGroup = matched.matchedGroups[0];
-        const advice = await aiSavingsAdvisor({
-          productOffers: topGroup.products.map(p => ({
-            platform: p.platform,
-            productTitle: p.title,
-            price: p.price,
-            deliveryEstimate: "2-4 days",
-            stockStatus: "In Stock",
-            productUrl: p.productUrl
-          }))
-        });
-        setSavingsAdvice(advice);
+      if (data.matchedGroups.length === 0) {
+        setError("No realistic offers found for this query. Try a more specific product name.");
+      } else {
+        setResults(data);
       }
     } catch (err) {
       console.error(err);
-      setError("The PriceNova engine encountered an error while fetching live data. Our scrapers might be blocked or the AI is busy.");
+      setError("The PriceNova engine encountered an error while fetching live data. Please try again in a few moments.");
     } finally {
       setLoading(false);
-      setCurrentStep("");
     }
   }
 
@@ -101,9 +78,9 @@ export function SearchResults({ query }: SearchResultsProps) {
           <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary w-6 h-6 animate-pulse" />
         </div>
         <p className="mt-6 font-headline font-medium text-lg animate-pulse-glow text-center">
-          {currentStep || "Connecting to marketplaces..."}
+          Connecting to marketplaces...
         </p>
-        <p className="text-sm text-muted-foreground mt-2">Using GenAI to bypass bot protection & fetch realistic data</p>
+        <p className="text-sm text-muted-foreground mt-2">Bypassing anti-bot shields & fetching live data</p>
       </div>
     );
   }
@@ -120,14 +97,16 @@ export function SearchResults({ query }: SearchResultsProps) {
     );
   }
 
+  const savingsAdvice = results?.savingsAdvice;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-8">
-        {matchedResults?.matchedGroups.map((group, groupIdx) => (
+        {results?.matchedGroups.map((group, groupIdx) => (
           <div key={group.groupId} className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Group {groupIdx + 1}: {group.products[0].title.split(' ').slice(0, 4).join(' ')}
+                {group.products[0].title.split(' ').slice(0, 4).join(' ')}
               </h2>
               <span className="text-[10px] font-bold bg-white/5 px-2 py-1 rounded-full uppercase tracking-tighter">
                 {group.products.length} Platform Matches
@@ -146,12 +125,6 @@ export function SearchResults({ query }: SearchResultsProps) {
             </div>
           </div>
         ))}
-        
-        {matchedResults?.matchedGroups.length === 0 && (
-          <div className="text-center py-20 glass rounded-2xl">
-            <p className="text-muted-foreground">No realistic offers found for this query. Try a more specific product name.</p>
-          </div>
-        )}
       </div>
 
       <div className="space-y-6">
